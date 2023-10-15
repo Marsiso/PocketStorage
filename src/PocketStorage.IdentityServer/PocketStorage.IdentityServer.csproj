@@ -10,4 +10,5 @@
     <ProjectReference Include="..\PocketStorage.Application\PocketStorage.Application.csproj"/>
   </ItemGroup>
 
+
 </Project>
