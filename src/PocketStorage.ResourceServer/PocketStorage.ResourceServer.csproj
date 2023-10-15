@@ -11,10 +11,9 @@
   </ItemGroup>
 
 
-
   <ItemGroup>
-    <ProjectReference Include="..\PocketStorage.Application\PocketStorage.Application.csproj" />
-    <ProjectReference Include="..\PocketStorage.Client\PocketStorage.Client.csproj" />
+    <ProjectReference Include="..\PocketStorage.Application\PocketStorage.Application.csproj"/>
+    <ProjectReference Include="..\PocketStorage.Client\PocketStorage.Client.csproj"/>
   </ItemGroup>
 
 </Project>

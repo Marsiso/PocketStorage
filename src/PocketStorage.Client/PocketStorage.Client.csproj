@@ -14,13 +14,7 @@
 
 
   <ItemGroup>
-    <Folder Include="wwwroot\libs\"/>
-  </ItemGroup>
-
-
-
-  <ItemGroup>
-    <ProjectReference Include="..\PocketStorage.Domain\PocketStorage.Domain.csproj" />
+    <ProjectReference Include="..\PocketStorage.Domain\PocketStorage.Domain.csproj"/>
   </ItemGroup>
 
 
