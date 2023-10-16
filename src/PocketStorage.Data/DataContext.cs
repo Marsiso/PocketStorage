@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -12,10 +11,7 @@ public class DataContext : IdentityDbContext<User, Role, string>
 {
     private readonly ISaveChangesInterceptor _interceptor;
 
-    public DataContext(DbContextOptions<DataContext> options, ISaveChangesInterceptor interceptor) : base(options)
-    {
-        _interceptor = interceptor;
-    }
+    public DataContext(DbContextOptions<DataContext> options, ISaveChangesInterceptor interceptor) : base(options) => _interceptor = interceptor;
 
     public new DbSet<User> Users { get; set; } = default!;
     public new DbSet<Role> Roles { get; set; } = default!;

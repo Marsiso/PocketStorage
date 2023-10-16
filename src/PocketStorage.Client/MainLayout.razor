@@ -1,5 +1,59 @@
 ﻿@inherits LayoutComponentBase
 
-<main>
-    @Body
-</main>
+<header>
+    <nav class="navbar sticky-top navbar-expand-sm navbar-toggleable-sm border-bottom shadow-lg mb-3 p-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">PocketStorage</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <AuthorizeView>
+                    <Authorized>
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Home</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link"href="#">Privacy</a>
+                            </li>
+                        </ul>
+                        <ul class="navbar-nav flex-grow-1 justify-content-end">
+                            <li class="nav-item">
+                                <form action="api/account/logout" method="post">
+                                    <AntiForgeryTokenInput/>
+                                    <button type="submit" class="nav-link" href="/Logout">Logout</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </Authorized>
+                    <NotAuthorized>
+                        <ul class="navbar-nav flex-grow-1 justify-content-end">
+                            <li class="nav-item">
+                                <a class="nav-link" href="/">Home</a>
+                            </li>
+                        </ul>
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <form action="api/account/login" method="post">
+                                    <AntiForgeryTokenInput/>
+                                    <button type="submit" class="nav-link" href="/Login">Login</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<div class="container">
+    <main role="main" class="pb-3">
+        @Body
+    </main>
+</div>
+
+<footer class="fixed-bottom border-top text-center text-muted p-3">
+    &copy; 2023 - PocketStorage WASM
+</footer>

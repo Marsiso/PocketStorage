@@ -10,6 +10,14 @@ public class UserConfiguration : ChangeTrackingEntityConfiguration<User>
     {
         base.Configure(builder);
 
+        builder.Property(entity => entity.GivenName)
+            .IsUnicode()
+            .HasMaxLength(256);
+
+        builder.Property(entity => entity.FamilyName)
+            .IsUnicode()
+            .HasMaxLength(256);
+
         builder.Property(entity => entity.ProfilePhoto)
             .HasMaxLength(4096);
     }

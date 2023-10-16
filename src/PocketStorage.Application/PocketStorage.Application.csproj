@@ -10,4 +10,10 @@
     <ProjectReference Include="..\PocketStorage.Core\PocketStorage.Core.csproj"/>
   </ItemGroup>
 
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0"/>
+    <PackageReference Include="NetEscapades.AspNetCore.SecurityHeaders" Version="0.21.0"/>
+  </ItemGroup>
+
 </Project>
