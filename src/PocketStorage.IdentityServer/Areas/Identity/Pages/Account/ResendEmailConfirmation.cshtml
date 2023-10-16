@@ -12,11 +12,11 @@
         <form method="post">
             <div asp-validation-summary="All" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Form.Email" class="form-control" aria-required="true" placeholder="name@example.com"/>
+                <input asp-for="Form.Email" type="email" class="form-control" aria-required="true" placeholder="peter.pavel@centrum.com" required/>
                 <label asp-for="Form.Email" class="form-label"></label>
                 <span asp-validation-for="Form.Email" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Resend</button>
+            <button type="submit" class="w-100 btn btn-primary">Resend</button>
         </form>
     </div>
 </div>

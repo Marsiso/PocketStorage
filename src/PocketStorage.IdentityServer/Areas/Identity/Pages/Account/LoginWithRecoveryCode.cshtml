@@ -15,11 +15,11 @@
         <form method="post">
             <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
             <div class="form-floating mb-3">
-                <input asp-for="Form.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode"/>
+                <input asp-for="Form.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" required/>
                 <label asp-for="Form.RecoveryCode" class="form-label"></label>
                 <span asp-validation-for="Form.RecoveryCode" class="text-danger"></span>
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+            <button type="submit" class="w-100 btn btn-primary">Log in</button>
         </form>
     </div>
 </div>

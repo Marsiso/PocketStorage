@@ -1,4 +1,5 @@
 ﻿@page
+@using Microsoft.AspNetCore.Authentication
 @model LoginModel
 
 @{
@@ -14,12 +15,12 @@
                 <hr/>
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Form.Email" class="form-control" autocomplete="username" aria-required="true" placeholder="name@example.com"/>
+                    <input asp-for="Form.Email" type="email" class="form-control" autocomplete="username" aria-required="true" placeholder="petr.pavel@centrum.cz" required/>
                     <label asp-for="Form.Email" class="form-label">Email</label>
                     <span asp-validation-for="Form.Email" class="text-danger"></span>
                 </div>
                 <div class="form-floating mb-3">
-                    <input asp-for="Form.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password"/>
+                    <input asp-for="Form.Password" type="password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="password" required/>
                     <label asp-for="Form.Password" class="form-label">Password</label>
                     <span asp-validation-for="Form.Password" class="text-danger"></span>
                 </div>
@@ -30,7 +31,7 @@
                     </label>
                 </div>
                 <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                    <button id="login-submit" type="submit" class="w-100 btn btn-primary">Log in</button>
                 </div>
                 <div>
                     <p>

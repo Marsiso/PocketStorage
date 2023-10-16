@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using OpenIddict.Abstractions;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
@@ -46,18 +47,53 @@ services.ConfigureApplicationCookie(options => options.Configure());
         options.ClientSecret = configuration["Clients:MicrosoftAccount:Secret"] ?? string.Empty;
     });*/
 
+services.AddOpenIddict()
+    .AddCore(options =>
+    {
+        options.UseEntityFrameworkCore()
+            .UseDbContext<DataContext>();
+    })
+    .AddServer(builder =>
+    {
+        // Enable the authorization, logout, token and user info endpoints.
+        builder.SetAuthorizationEndpointUris("/connect/authorize");
+        builder.SetLogoutEndpointUris("/connect/logout");
+        builder.SetTokenEndpointUris("/connect/token");
+        builder.SetUserinfoEndpointUris("/connect/userInfo");
+        builder.SetIntrospectionEndpointUris("/connect/introspect");
+        builder.SetVerificationEndpointUris("/connect/verify");
+
+        // Mark the "email", "profile" and "roles" scopes as supported scopes.
+        builder.RegisterScopes(OpenIddictConstants.Scopes.Email, OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Roles);
+
+        // Enable the client credentials flow
+        builder.AllowClientCredentialsFlow();
+        builder.AllowAuthorizationCodeFlow();
+        builder.AllowRefreshTokenFlow();
+        builder.RequireProofKeyForCodeExchange();
+
+        // Register the signing and encryption credentials.
+        builder.AddDevelopmentEncryptionCertificate();
+        builder.AddDevelopmentSigningCertificate();
+
+        // Register the ASP.NET Core host and configure the ASP.NET Core options.
+        builder.UseAspNetCore()
+            .EnableAuthorizationEndpointPassthrough()
+            .EnableLogoutEndpointPassthrough()
+            .EnableTokenEndpointPassthrough()
+            .EnableUserinfoEndpointPassthrough()
+            .EnableStatusCodePagesIntegration();
+    })
+    .AddValidation(options =>
+    {
+        // Import the configuration from the local OpenIddict server instance.
+        options.UseLocalServer();
+
+        // Register the ASP.NET Core host.
+        options.UseAspNetCore();
+    });
+
 WebApplication application = builder.Build();
-
-using IServiceScope serviceScope = application.Services.CreateScope();
-
-DataContext databaseContext = serviceScope.ServiceProvider.GetRequiredService<DataContext>();
-
-if (environment.IsDevelopment())
-{
-    databaseContext.Database.EnsureDeleted();
-}
-
-databaseContext.Database.EnsureCreated();
 
 if (environment.IsDevelopment())
 {

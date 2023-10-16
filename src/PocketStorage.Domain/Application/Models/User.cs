@@ -6,6 +6,8 @@ namespace PocketStorage.Domain.Application.Models;
 
 public class User : IdentityUser, IChangeTrackingEntity
 {
+    public string GivenName { get; set; } = string.Empty;
+    public string FamilyName { get; set; } = string.Empty;
     public string Culture { get; set; } = CultureDefaults.Default;
     public string? ProfilePhoto { get; set; }
     public bool IsActive { get; set; }

@@ -1,24 +1,20 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
-
-#nullable disable
-
-using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PocketStorage.Domain.Application.DataTransferObjects;
+using PocketStorage.Domain.Application.Models;
 
 namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class DeletePersonalDataModel : PageModel
 {
     private readonly ILogger<DeletePersonalDataModel> _logger;
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly SignInManager<User> _signInManager;
+    private readonly UserManager<User> _userManager;
 
     public DeletePersonalDataModel(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
         ILogger<DeletePersonalDataModel> logger)
     {
         _userManager = userManager;
@@ -26,23 +22,15 @@ public class DeletePersonalDataModel : PageModel
         _logger = logger;
     }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    [BindProperty]
-    public InputModel Input { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
+    [BindProperty] public DeletePersonalDataInput Form { get; set; }
+
     public bool RequirePassword { get; set; }
 
     public async Task<IActionResult> OnGet()
     {
-        IdentityUser user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        User? user = await _userManager.GetUserAsync(User);
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -53,8 +41,8 @@ public class DeletePersonalDataModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        IdentityUser user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        User? user = await _userManager.GetUserAsync(User);
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -62,7 +50,7 @@ public class DeletePersonalDataModel : PageModel
         RequirePassword = await _userManager.HasPasswordAsync(user);
         if (RequirePassword)
         {
-            if (!await _userManager.CheckPasswordAsync(user, Input.Password))
+            if (!await _userManager.CheckPasswordAsync(user, Form.Password))
             {
                 ModelState.AddModelError(string.Empty, "Incorrect password.");
                 return Page();
@@ -81,20 +69,5 @@ public class DeletePersonalDataModel : PageModel
         _logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
 
         return Redirect("~/");
-    }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
-    public class InputModel
-    {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
-        [Required]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
     }
 }
