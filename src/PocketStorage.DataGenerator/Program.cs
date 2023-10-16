@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using PocketStorage.Application.Extensions;
+using PocketStorage.Application.Services;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.DataGenerator.Services;
@@ -13,6 +15,13 @@ IWebHostEnvironment environment = builder.Environment;
 
 services.AddOptions();
 services.AddSingleton(configuration);
+
+services.AddOptions<ArgonPasswordHasherOptions>()
+    .Configure(options => { options.Pepper = "SecurePasswordPepper"; })
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+services.AddSingleton<IPasswordHasher<User>, ArgonPasswordHasher<User>>();
 
 services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
 services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), configuration));
