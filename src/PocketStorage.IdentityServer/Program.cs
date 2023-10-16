@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using OpenIddict.Abstractions;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Services;
+using PocketStorage.Core.Application.Queries;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.Domain.Application.Models;
@@ -101,6 +102,8 @@ services.AddOpenIddict()
         // Register the ASP.NET Core host.
         options.UseAspNetCore();
     });
+
+services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly));
 
 WebApplication application = builder.Build();
 

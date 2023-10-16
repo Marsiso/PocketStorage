@@ -3,7 +3,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Contracts;
+using PocketStorage.Domain.Constants;
 
 namespace PocketStorage.Client.Services;
 

@@ -1,9 +1,16 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using PocketStorage.Application.Extensions;
+using PocketStorage.Application.Services;
+using PocketStorage.Core.Application.Queries;
+using PocketStorage.Data;
+using PocketStorage.Data.Interceptors;
+using PocketStorage.Domain.Application.Models;
 using PocketStorage.ResourceServer.Extensions;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -56,6 +63,18 @@ services.AddControllersWithViews(options => options.Filters.Add(new AutoValidate
 
 services.AddRazorPages()
     .AddMvcOptions(options => options.Configure());
+
+services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
+services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), configuration));
+services.AddDatabaseDeveloperPageExceptionFilter();
+
+services.AddSingleton<IPasswordHasher<User>, ArgonPasswordHasher<User>>();
+
+services.AddIdentityCore<User>()
+    .AddRoles<Role>()
+    .AddEntityFrameworkStores<DataContext>();
+
+services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly));
 
 WebApplication application = builder.Build();
 

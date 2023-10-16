@@ -1,4 +1,4 @@
-﻿using PocketStorage.Domain.Contracts;
+﻿using PocketStorage.Domain.Constants;
 
 namespace PocketStorage.ResourceServer.Extensions;
 

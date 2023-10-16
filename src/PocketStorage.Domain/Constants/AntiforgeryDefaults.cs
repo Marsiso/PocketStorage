@@ -1,4 +1,4 @@
-﻿namespace PocketStorage.Domain.Contracts;
+﻿namespace PocketStorage.Domain.Constants;
 
 public static class AntiforgeryDefaults
 {

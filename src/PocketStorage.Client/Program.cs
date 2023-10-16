@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using PocketStorage.Client;
 using PocketStorage.Client.Services;
 using PocketStorage.Client.Services.Abstractions;
-using PocketStorage.Domain.Contracts;
+using PocketStorage.Domain.Constants;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 

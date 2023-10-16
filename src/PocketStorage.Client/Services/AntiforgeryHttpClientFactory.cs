@@ -1,6 +1,6 @@
 ﻿using Microsoft.JSInterop;
 using PocketStorage.Client.Services.Abstractions;
-using PocketStorage.Domain.Contracts;
+using PocketStorage.Domain.Constants;
 
 namespace PocketStorage.Client.Services;
 
