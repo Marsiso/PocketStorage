@@ -2,19 +2,19 @@
 
 public static class Tables
 {
-    public const string AspNetCoreUsers = nameof(AspNetCoreUsers);
-    public const string AspNetCoreRoles = nameof(AspNetCoreRoles);
-    public const string AspNetCoreUserRoles = nameof(AspNetCoreUserRoles);
-    public const string AspNetCoreUserClaims = nameof(AspNetCoreUserClaims);
-    public const string AspNetCoreRoleClaims = nameof(AspNetCoreRoleClaims);
-    public const string AspNetCoreUserTokens = nameof(AspNetCoreUserTokens);
-    public const string AspNetCoreUserLogins = nameof(AspNetCoreUserLogins);
-    public const string ApplicationCodeLists = nameof(ApplicationCodeLists);
-    public const string ApplicationCodeListItems = nameof(ApplicationCodeListItems);
-    public const string ApplicationFiles = nameof(ApplicationFiles);
-    public const string ApplicationFolders = nameof(ApplicationFolders);
-    public const string OpenIddictApplications = nameof(OpenIddictApplications);
-    public const string OpenIddictScopes = nameof(OpenIddictScopes);
-    public const string OpenIddictTokens = nameof(OpenIddictTokens);
-    public const string OpenIddictAuthorizations = nameof(OpenIddictAuthorizations);
+    public const string Users = nameof(Users);
+    public const string Roles = nameof(Roles);
+    public const string UserRoles = nameof(UserRoles);
+    public const string UserClaims = nameof(UserClaims);
+    public const string RoleClaims = nameof(RoleClaims);
+    public const string UserTokens = nameof(UserTokens);
+    public const string UserLogins = nameof(UserLogins);
+    public const string CodeLists = nameof(CodeLists);
+    public const string CodeListItems = nameof(CodeListItems);
+    public const string Files = nameof(Files);
+    public const string Folders = nameof(Folders);
+    public const string Applications = nameof(Applications);
+    public const string Scopes = nameof(Scopes);
+    public const string Tokens = nameof(Tokens);
+    public const string Authorizations = nameof(Authorizations);
 }
