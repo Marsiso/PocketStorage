@@ -20,27 +20,27 @@
                 <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
                 <div class="mb-3">
                     <label asp-for="Form.GivenName" class="form-label">Given name</label>
-                    <input asp-for="Form.GivenName" type="text" class="form-control" autocomplete="username" aria-required="true" placeholder="Petr" required/>
+                    <input asp-for="Form.GivenName" type="text" class="form-control" autocomplete="username" aria-required="true" placeholder="Your name" required/>
                     <span asp-validation-for="Form.GivenName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Form.FamilyName" class="form-label">Family name</label>
-                    <input asp-for="Form.FamilyName" type="text" class="form-control" autocomplete="username" aria-required="true" placeholder="Pavel" required/>
+                    <input asp-for="Form.FamilyName" type="text" class="form-control" autocomplete="username" aria-required="true" placeholder="Your surname" required/>
                     <span asp-validation-for="Form.FamilyName" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Form.Email" class="form-label">Email</label>
-                    <input asp-for="Form.Email" type="email" class="form-control" autocomplete="username" aria-required="true" placeholder="petr.pavel@centrum.cz" required/>
+                    <input asp-for="Form.Email" type="email" class="form-control" autocomplete="username" aria-required="true" placeholder="Your email address" required/>
                     <span asp-validation-for="Form.Email" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Form.Password" class="form-label">Password</label>
-                    <input asp-for="Form.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Password" required/>
+                    <input asp-for="Form.Password" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Your password" required/>
                     <span asp-validation-for="Form.Password" class="text-danger"></span>
                 </div>
                 <div class="mb-3">
                     <label asp-for="Form.ConfirmPassword" class="form-label">Confirm Password</label>
-                    <input asp-for="Form.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Password repeat" required/>
+                    <input asp-for="Form.ConfirmPassword" type="password" class="form-control" autocomplete="new-password" aria-required="true" placeholder="Confirm your password" required/>
                     <span asp-validation-for="Form.ConfirmPassword" class="text-danger"></span>
                 </div>
                 <button id="registerSubmit" type="submit" class="w-100 btn btn-light">Register</button>
