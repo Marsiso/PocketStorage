@@ -1,92 +1,99 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Net;
 using MediatR;
-using Microsoft.Extensions.Logging;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Enums;
+using PocketStorage.Domain.Models;
+using static PocketStorage.Core.Application.Commands.RemovePermissionsCommandResultStatus;
 
 namespace PocketStorage.Core.Application.Commands;
 
-public record RemovePermissionsCommand(string? RoleName, Permission Permissions) : IRequest<RemovePermissionsCommandResult>;
+public record RemovePermissionsCommand(string? Role, Permission Permissions) : IRequest<RemovePermissionsCommandResult>;
 
 public class RemovePermissionsCommandHandler : IRequestHandler<RemovePermissionsCommand, RemovePermissionsCommandResult>
 {
-    private readonly DataContext _databaseContext;
-    private readonly ILogger<RemovePermissionsCommandHandler> _logger;
+    private readonly DataContext _context;
     private readonly IMediator _mediator;
 
-    public RemovePermissionsCommandHandler(DataContext databaseContext, IMediator mediator, ILogger<RemovePermissionsCommandHandler> logger)
+    public RemovePermissionsCommandHandler(DataContext context, IMediator mediator)
     {
-        _databaseContext = databaseContext;
+        _context = context;
         _mediator = mediator;
-        _logger = logger;
     }
 
     public async Task<RemovePermissionsCommandResult> Handle(RemovePermissionsCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            GetRoleWithNameQuery query = new(request.RoleName);
-            GetRoleWithNameQueryResult queryResult = await _mediator.Send(query, cancellationToken);
-
-            if (queryResult.ResultType == GetRoleWithNameQueryResultType.RoleNotFound)
+            GetRoleQueryResult result = await _mediator.Send(new GetRoleQuery(request.Role), cancellationToken);
+            switch (result.Status)
             {
-                return new RemovePermissionsCommandResult(RemovePermissionsCommandResultType.PermissionsNotRemoved, default, queryResult.Exception);
+                case GetRoleQueryStatus.Fail:
+                    return new RemovePermissionsCommandResult(result.Error);
+
+                case GetRoleQueryStatus.OperationCancelled:
+                    return new RemovePermissionsCommandResult(OperationCancelled, result.Error);
+
+                case GetRoleQueryStatus.InternalServerError:
+                    return new RemovePermissionsCommandResult(InternalServerError, result.Error);
+
+                case GetRoleQueryStatus.Success:
+                    Role role = result.Result;
+
+                    role.Permissions &= ~request.Permissions;
+
+                    _context.Roles.Update(role);
+
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    return new RemovePermissionsCommandResult(Success, role);
+
+                default:
+                    return new RemovePermissionsCommandResult(InternalServerError, new ApiCallError(HttpStatusCode.InternalServerError, new ArgumentOutOfRangeException(nameof(result), $"Unhandled parameter '{nameof(GetRoleQueryStatus)}' value is out of range.")));
             }
-
-            if (queryResult.ResultType == GetRoleWithNameQueryResultType.OperationCancelled)
-            {
-                return new RemovePermissionsCommandResult(RemovePermissionsCommandResultType.OperationCancelled, default, queryResult.Exception);
-            }
-
-            if (queryResult.ResultType != GetRoleWithNameQueryResultType.RoleFound)
-            {
-                return new RemovePermissionsCommandResult(RemovePermissionsCommandResultType.InternalServerError, default, queryResult.Exception);
-            }
-
-            Role originalRole = queryResult.GetResult();
-
-            Permission permission = ~request.Permissions;
-
-            originalRole.Permissions &= permission;
-
-            _databaseContext.Roles.Update(originalRole);
-
-            await _databaseContext.SaveChangesAsync(cancellationToken);
-
-            return new RemovePermissionsCommandResult(RemovePermissionsCommandResultType.PermissionsRemoved, originalRole, default);
+        }
+        catch (OperationCanceledException exception)
+        {
+            return new RemovePermissionsCommandResult(new ApiCallError(499, exception));
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new RemovePermissionsCommandResult(RemovePermissionsCommandResultType.InternalServerError, default, exception);
+            return new RemovePermissionsCommandResult(new ApiCallError(HttpStatusCode.InternalServerError, exception));
         }
     }
 }
 
-public record RemovePermissionsCommandResult(RemovePermissionsCommandResultType ResultType, Role? Result, Exception? Exception)
+public class RemovePermissionsCommandResult : IRequestResult
 {
-    public Role GetResult()
+    public RemovePermissionsCommandResult(RemovePermissionsCommandResultStatus status, Role? result)
     {
-        Guard.IsNotNull(Result);
-
-        return Result;
+        Status = status;
+        Result = result;
     }
 
-    public Exception GetException()
+    public RemovePermissionsCommandResult(RemovePermissionsCommandResultStatus status, ApiCallError? error)
     {
-        Guard.IsNotNull(Exception);
-
-        return Exception;
+        Status = status;
+        Error = error;
     }
+
+    public RemovePermissionsCommandResult(ApiCallError? error)
+    {
+        Status = Fail;
+        Error = error;
+    }
+
+    public RemovePermissionsCommandResultStatus Status { get; set; }
+    public Role? Result { get; set; }
+    public ApiCallError? Error { get; set; }
 }
 
-public enum RemovePermissionsCommandResultType
+public enum RemovePermissionsCommandResultStatus
 {
-    PermissionsRemoved,
-    PermissionsNotRemoved,
+    Success,
+    Fail,
     OperationCancelled,
     InternalServerError
 }

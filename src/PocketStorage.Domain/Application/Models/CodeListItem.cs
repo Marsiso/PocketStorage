@@ -1,4 +1,4 @@
-﻿using PocketStorage.Domain.FileSystem.Models;
+﻿using PocketStorage.Domain.Files.Models;
 using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Domain.Application.Models;

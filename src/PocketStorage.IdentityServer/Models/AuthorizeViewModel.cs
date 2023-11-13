@@ -2,7 +2,7 @@
 
 namespace PocketStorage.IdentityServer.Models;
 
-public sealed class AuthorizeViewModel
+public class AuthorizeViewModel
 {
     [Display(Name = "Application")] public string? ApplicationName { get; set; }
 

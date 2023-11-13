@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PocketStorage.Data.Configurations;
+using PocketStorage.Data.Common.Configurations;
 using PocketStorage.Domain.Application.Models;
 
 namespace PocketStorage.Data.Application.Configurations;

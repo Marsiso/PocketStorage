@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using OpenIddict.EntityFrameworkCore.Models;
 using PocketStorage.Domain.Application.Models;
-using PocketStorage.Domain.FileSystem.Models;
-using File = PocketStorage.Domain.FileSystem.Models.File;
+using PocketStorage.Domain.Files.Models;
+using File = PocketStorage.Domain.Files.Models.File;
 
 namespace PocketStorage.Data;
 
@@ -13,10 +13,7 @@ public class DataContext : IdentityDbContext<User, Role, string>
 {
     private readonly ISaveChangesInterceptor _interceptor;
 
-    public DataContext(DbContextOptions<DataContext> options, ISaveChangesInterceptor interceptor) : base(options)
-    {
-        _interceptor = interceptor;
-    }
+    public DataContext(DbContextOptions<DataContext> options, ISaveChangesInterceptor interceptor) : base(options) => _interceptor = interceptor;
 
     public new DbSet<User> Users { get; set; } = default!;
     public new DbSet<Role> Roles { get; set; } = default!;
@@ -35,12 +32,12 @@ public class DataContext : IdentityDbContext<User, Role, string>
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.HasDefaultSchema(Schemas.FileSystem);
+        modelBuilder.HasDefaultSchema(Schemas.Files);
 
-        modelBuilder.Entity<OpenIddictEntityFrameworkCoreToken>().ToTable(Tables.Tokens, Schemas.OpenIddict);
-        modelBuilder.Entity<OpenIddictEntityFrameworkCoreApplication>().ToTable(Tables.Applications, Schemas.OpenIddict);
-        modelBuilder.Entity<OpenIddictEntityFrameworkCoreAuthorization>().ToTable(Tables.Authorizations, Schemas.OpenIddict);
-        modelBuilder.Entity<OpenIddictEntityFrameworkCoreScope>().ToTable(Tables.Scopes, Schemas.OpenIddict);
+        modelBuilder.Entity<OpenIddictEntityFrameworkCoreToken>().ToTable(Tables.Tokens, Schemas.OpenId);
+        modelBuilder.Entity<OpenIddictEntityFrameworkCoreApplication>().ToTable(Tables.Applications, Schemas.OpenId);
+        modelBuilder.Entity<OpenIddictEntityFrameworkCoreAuthorization>().ToTable(Tables.Authorizations, Schemas.OpenId);
+        modelBuilder.Entity<OpenIddictEntityFrameworkCoreScope>().ToTable(Tables.Scopes, Schemas.OpenId);
 
         modelBuilder.Entity<User>().ToTable(Tables.Users, Schemas.Application);
         modelBuilder.Entity<Role>().ToTable(Tables.Roles, Schemas.Application);

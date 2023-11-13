@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using PocketStorage.Data.Configurations;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using PocketStorage.Data.Common.Configurations;
 using PocketStorage.Domain.Application.Models;
 
 namespace PocketStorage.Data.Application.Configurations;
@@ -20,5 +21,11 @@ public class UserConfiguration : ChangeTrackingEntityConfiguration<User>
 
         builder.Property(entity => entity.ProfilePhoto)
             .HasMaxLength(4096);
+
+        builder.HasMany(entity => entity.Folders)
+            .WithOne(entity => entity.User)
+            .HasForeignKey(entity => entity.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

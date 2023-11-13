@@ -2,22 +2,20 @@
 
 public static class AsyncEnumerableExtensions
 {
-    public static Task<List<T>> ToListAsync<T>(this IAsyncEnumerable<T> source)
+    public static Task<List<TItem>> ToListAsync<TItem>(this IAsyncEnumerable<TItem> source)
     {
-        if (source is null)
+        if (source == null)
         {
-            string errorMessage = $"[{nameof(AsyncEnumerableExtensions)}] Null reference exception. Parameter: '{nameof(source)}' Value: '{null}'.";
-
-            throw new ArgumentNullException(nameof(source), errorMessage);
+            throw new ArgumentNullException(nameof(source), $"[{nameof(AsyncEnumerableExtensions)}] Null reference exception. Parameter: '{nameof(source)}' Value: '{null}'.");
         }
 
         return ExecuteAsync();
 
-        async Task<List<T>> ExecuteAsync()
+        async Task<List<TItem>> ExecuteAsync()
         {
-            List<T> list = new();
+            List<TItem> list = new();
 
-            await foreach (T element in source)
+            await foreach (TItem element in source)
             {
                 list.Add(element);
             }

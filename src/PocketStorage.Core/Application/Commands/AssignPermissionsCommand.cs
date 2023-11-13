@@ -1,90 +1,100 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Net;
 using MediatR;
-using Microsoft.Extensions.Logging;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Enums;
+using PocketStorage.Domain.Models;
+using static PocketStorage.Core.Application.Commands.AssignPermissionsCommandResultStatus;
 
 namespace PocketStorage.Core.Application.Commands;
 
-public record AssignPermissionsCommand(string? RoleName, Permission Permissions) : IRequest<AssignPermissionsCommandResult>;
+public record AssignPermissionsCommand(string? Role, Permission Permissions) : IRequest<AssignPermissionsCommandResult>;
 
 public class AssignPermissionsCommandHandler : IRequestHandler<AssignPermissionsCommand, AssignPermissionsCommandResult>
 {
-    private readonly DataContext _databaseContext;
-    private readonly ILogger<AssignPermissionsCommandHandler> _logger;
+    private readonly DataContext _context;
     private readonly IMediator _mediator;
 
-    public AssignPermissionsCommandHandler(DataContext databaseContext, IMediator mediator, ILogger<AssignPermissionsCommandHandler> logger)
+    public AssignPermissionsCommandHandler(DataContext context, IMediator mediator)
     {
-        _databaseContext = databaseContext;
+        _context = context;
         _mediator = mediator;
-        _logger = logger;
     }
 
     public async Task<AssignPermissionsCommandResult> Handle(AssignPermissionsCommand request, CancellationToken cancellationToken)
     {
         try
         {
-            GetRoleWithNameQuery query = new(request.RoleName);
-            GetRoleWithNameQueryResult queryResult = await _mediator.Send(query, cancellationToken);
+            GetRoleQueryResult result = await _mediator.Send(new GetRoleQuery(request.Role), cancellationToken);
 
-            if (queryResult.ResultType == GetRoleWithNameQueryResultType.RoleNotFound)
+            switch (result.Status)
             {
-                return new AssignPermissionsCommandResult(AssignPermissionsCommandResultType.PermissionsNotAssigned, default, queryResult.Exception);
+                case GetRoleQueryStatus.Fail:
+                    return new AssignPermissionsCommandResult(Fail, result.Error);
+
+                case GetRoleQueryStatus.OperationCancelled:
+                    return new AssignPermissionsCommandResult(OperationCancelled, result.Error);
+
+                case GetRoleQueryStatus.InternalServerError:
+                    return new AssignPermissionsCommandResult(InternalServerError, result.Error);
+
+                case GetRoleQueryStatus.Success:
+                    Role role = result.Result;
+
+                    role.Permissions |= request.Permissions;
+
+                    _context.Roles.Update(role);
+
+                    await _context.SaveChangesAsync(cancellationToken);
+
+                    return new AssignPermissionsCommandResult(Success, new ApiCallError(HttpStatusCode.InternalServerError, new ArgumentOutOfRangeException(nameof(result), $"Unhandled parameter '{nameof(GetRoleQueryStatus)}' value is out of range.")));
+
+                default:
+                    return new AssignPermissionsCommandResult(InternalServerError, result.Error);
             }
-
-            if (queryResult.ResultType == GetRoleWithNameQueryResultType.OperationCancelled)
-            {
-                return new AssignPermissionsCommandResult(AssignPermissionsCommandResultType.OperationCancelled, default, queryResult.Exception);
-            }
-
-            if (queryResult.ResultType != GetRoleWithNameQueryResultType.RoleFound)
-            {
-                return new AssignPermissionsCommandResult(AssignPermissionsCommandResultType.InternalServerError, default, queryResult.Exception);
-            }
-
-            Role originalRole = queryResult.GetResult();
-
-            originalRole.Permissions |= request.Permissions;
-
-            _databaseContext.Roles.Update(originalRole);
-
-            await _databaseContext.SaveChangesAsync(cancellationToken);
-
-            return new AssignPermissionsCommandResult(AssignPermissionsCommandResultType.PermissionsAssigned, originalRole, default);
+        }
+        catch (OperationCanceledException exception)
+        {
+            return new AssignPermissionsCommandResult(OperationCancelled, new ApiCallError(499, exception));
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new AssignPermissionsCommandResult(AssignPermissionsCommandResultType.InternalServerError, default, exception);
+            return new AssignPermissionsCommandResult(InternalServerError, new ApiCallError(HttpStatusCode.InternalServerError, exception));
         }
     }
 }
 
-public record AssignPermissionsCommandResult(AssignPermissionsCommandResultType ResultType, Role? Result, Exception? Exception)
+public class AssignPermissionsCommandResult : IRequestResult
 {
-    public Role GetResult()
+    public AssignPermissionsCommandResult(AssignPermissionsCommandResultStatus status, Role? result)
     {
-        Guard.IsNotNull(Result);
-
-        return Result;
+        Status = status;
+        Result = result;
     }
 
-    public Exception GetException()
+    public AssignPermissionsCommandResult(AssignPermissionsCommandResultStatus status, ApiCallError? error)
     {
-        Guard.IsNotNull(Exception);
-
-        return Exception;
+        Status = Fail;
+        Error = error;
     }
+
+    public AssignPermissionsCommandResult(ApiCallError? error)
+    {
+        Status = Fail;
+        Error = error;
+    }
+
+    public AssignPermissionsCommandResultStatus Status { get; set; }
+    public Role? Result { get; set; }
+    public ApiCallError? Error { get; set; }
 }
 
-public enum AssignPermissionsCommandResultType
+public enum AssignPermissionsCommandResultStatus
 {
-    PermissionsAssigned,
-    PermissionsNotAssigned,
+    Success,
+    Fail,
     OperationCancelled,
     InternalServerError
 }

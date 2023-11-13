@@ -3,7 +3,7 @@ using System.Text;
 using CommunityToolkit.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
-using PocketStorage.Application.Externals;
+using PocketStorage.Application.External;
 
 namespace PocketStorage.Application.Services;
 

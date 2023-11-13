@@ -18,10 +18,4 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Folder Include="Application\Mappings\"/>
-    <Folder Include="Application\Validators\"/>
-  </ItemGroup>
-
-
 </Project>

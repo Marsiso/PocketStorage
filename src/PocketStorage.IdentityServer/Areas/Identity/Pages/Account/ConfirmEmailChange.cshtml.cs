@@ -29,7 +29,7 @@ public class ConfirmEmailChangeModel : PageModel
         }
 
         User? user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{userId}'.");
         }

@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Application.Models;
 
@@ -8,24 +10,22 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class DeletePersonalDataModel : PageModel
 {
-    private readonly ILogger<DeletePersonalDataModel> _logger;
     private readonly SignInManager<User> _signInManager;
     private readonly UserManager<User> _userManager;
+    private readonly IValidator<DeletePersonalDataInput> _validator;
 
-    public DeletePersonalDataModel(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        ILogger<DeletePersonalDataModel> logger)
+    public DeletePersonalDataModel(UserManager<User> userManager, SignInManager<User> signInManager, IValidator<DeletePersonalDataInput> validator)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _logger = logger;
+        _validator = validator;
     }
 
 
-    [BindProperty] public DeletePersonalDataInput Form { get; set; }
+    [BindProperty] public DeletePersonalDataInput Form { get; set; } = null!;
 
     public bool RequirePassword { get; set; }
+    public Dictionary<string, string[]> Errors { get; set; } = new();
 
     public async Task<IActionResult> OnGet()
     {
@@ -42,7 +42,7 @@ public class DeletePersonalDataModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -50,24 +50,20 @@ public class DeletePersonalDataModel : PageModel
         RequirePassword = await _userManager.HasPasswordAsync(user);
         if (RequirePassword)
         {
-            if (!await _userManager.CheckPasswordAsync(user, Form.Password))
+            Errors = (await _validator.ValidateAsync(new ValidationContext<DeletePersonalDataInput>(Form))).DistinctErrorsByProperty();
+            if (Errors.Count > 0)
             {
-                ModelState.AddModelError(string.Empty, "Incorrect password.");
                 return Page();
             }
         }
 
         IdentityResult result = await _userManager.DeleteAsync(user);
-        string userId = await _userManager.GetUserIdAsync(user);
         if (!result.Succeeded)
         {
             throw new InvalidOperationException("Unexpected error occurred deleting user.");
         }
 
         await _signInManager.SignOutAsync();
-
-        _logger.LogInformation("User with ID '{UserId}' deleted themselves.", userId);
-
         return Redirect("~/");
     }
 }

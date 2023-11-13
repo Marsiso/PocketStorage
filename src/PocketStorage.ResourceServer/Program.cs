@@ -1,3 +1,5 @@
+using FluentValidation;
+using MediatR;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Identity;
@@ -5,9 +7,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
+using PocketStorage.Application.Application.Mappings;
+using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Services;
 using PocketStorage.Core.Application.Queries;
+using PocketStorage.Core.Pipelines;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.Domain.Application.Models;
@@ -61,7 +66,8 @@ services
 
 services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 
-services.AddRazorPages()
+services
+    .AddRazorPages()
     .AddMvcOptions(options => options.Configure());
 
 services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
@@ -74,7 +80,13 @@ services.AddIdentityCore<User>()
     .AddRoles<Role>()
     .AddEntityFrameworkStores<DataContext>();
 
-services.AddMediatR(options => options.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly));
+services.AddAutoMapper(typeof(UserProfile));
+services.AddValidatorsFromAssembly(typeof(LoginInputValidator).Assembly);
+services.AddMediatR(options =>
+{
+    options.RegisterServicesFromAssembly(typeof(GetUserQuery).Assembly);
+    options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehaviour<,>));
+});
 
 WebApplication application = builder.Build();
 

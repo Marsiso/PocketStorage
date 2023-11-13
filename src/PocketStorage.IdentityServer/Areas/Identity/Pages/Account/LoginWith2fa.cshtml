@@ -4,36 +4,37 @@
     ViewData["Title"] = "Two-factor authentication";
 }
 
-<h1>@ViewData["Title"]</h1>
-<hr/>
-<p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post" asp-route-returnUrl="@Model.ReturnUrl">
+<div class="text-center mb-3">
+    <h1 class="display-6">Two-factor authentication</h1>
+</div>
+<div class="row justify-content-center">
+    <div class="col-12" style="max-width: 30rem;">
+        <p>Your login is protected with an authenticator app. Enter your authenticator code below.</p>
+    </div>
+    <div class="col-12" style="max-width: 20rem;">
+        <form method="post" asp-route-returnUrl="@Model.ReturnUrl" class="needs-validation" novalidate>
             <input asp-for="RememberMe" type="hidden"/>
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Form.TwoFactorCode" class="form-control" autocomplete="off" required/>
+            <div class="mb-3">
                 <label asp-for="Form.TwoFactorCode" class="form-label"></label>
-                <span asp-validation-for="Form.TwoFactorCode" class="text-danger"></span>
+                <input asp-for="Form.TwoFactorCode" class="@(Model.Errors.ContainsKey(nameof(Model.Form.TwoFactorCode)) ? "form-control is-invalid" : "form-control")" autocomplete="off" placeholder="Please enter your code" required/>
+                @if (Model.Errors.TryGetValue(nameof(Model.Form.TwoFactorCode), out var twoFactorCodeErrors))
+                {
+                    <div class="invalid-feedback">
+                        @twoFactorCodeErrors.First()
+                    </div>
+                }
             </div>
-            <div class="checkbox mb-3">
-                <label asp-for="Form.RememberMachine" class="form-label">
-                    <input asp-for="Form.RememberMachine"/>
-                    @Html.DisplayNameFor(m => m.Form.RememberMachine)
-                </label>
+            <div class="form-check mb-3">
+                <label asp-for="RememberMe" class="form-check-label">Remember me</label>
+                <input asp-for="RememberMe" type="checkbox" class="form-check-input"/>
             </div>
-            <div>
-                <button type="submit" class="w-100 btn btn-primary">Log in</button>
-            </div>
+            <button type="submit" class="w-100 btn btn-secondary mb-3">Sign in</button>
         </form>
     </div>
+    <div class="col-12" style="max-width: 30rem;">
+        <p>
+            Don't have access to your authenticator device? You can
+            <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl" class="text-black">sign in with a recovery code</a>.
+        </p>
+    </div>
 </div>
-<p>
-    Don't have access to your authenticator device? You can
-    <a id="recovery-code-login" asp-page="./LoginWithRecoveryCode" asp-route-returnUrl="@Model.ReturnUrl">log in with a recovery code</a>.
-</p>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
-}

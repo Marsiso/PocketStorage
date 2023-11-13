@@ -1,87 +1,94 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Net;
+using CommunityToolkit.Diagnostics;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Exceptions;
+using PocketStorage.Domain.Models;
 using static System.String;
+using static PocketStorage.Core.Application.Queries.GetUserQueryResultStatus;
 
 namespace PocketStorage.Core.Application.Queries;
 
-public record GetUserQuery(string? Id) : IRequest<GetUserQueryResult>;
+public class GetUserQuery : IRequest<GetUserQueryResult>, IEmailRequest
+{
+    public string? Email { get; set; }
+}
 
 public class GetUserQueryHandler : IRequestHandler<GetUserQuery, GetUserQueryResult>
 {
-    public static readonly Func<DataContext, string, Task<User?>> Query = EF.CompileAsyncQuery((DataContext databaseContext, string id) =>
-        databaseContext.Users.AsNoTracking()
-            .SingleOrDefault(entity => entity.Id == id));
+    public static readonly Func<DataContext, string, Task<User?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string email) =>
+        context.Users.AsNoTracking().SingleOrDefault(entity => entity.Email == email));
 
-    private readonly DataContext _databaseContext;
-    private readonly ILogger<GetUserQueryHandler> _logger;
+    private readonly DataContext _context;
 
-    public GetUserQueryHandler(DataContext databaseContext, ILogger<GetUserQueryHandler> logger)
-    {
-        _databaseContext = databaseContext;
-        _logger = logger;
-    }
+    public GetUserQueryHandler(DataContext context) => _context = context;
 
     public async Task<GetUserQueryResult> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            User? originalUser = default;
-
-            if (!IsNullOrWhiteSpace(request.Id))
+            if (IsNullOrWhiteSpace(request.Email))
             {
-                originalUser = await Query(_databaseContext, request.Id);
+                return new GetUserQueryResult(new ApiCallError(new EntityNotFoundException(request.Email, nameof(User))));
             }
 
-            if (originalUser is not null)
+            User? user = await CompiledQuery(_context, request.Email);
+            if (user != null)
             {
-                return new GetUserQueryResult(GetUserQueryResultType.UserFound, originalUser, default);
+                return new GetUserQueryResult(Success, user);
             }
 
-            EntityNotFoundException exception = new(request.Id, nameof(User));
-
-            return new GetUserQueryResult(GetUserQueryResultType.UserNotFound, default, exception);
+            return new GetUserQueryResult(new ApiCallError(HttpStatusCode.NotFound, new EntityNotFoundException(request.Email, nameof(User))));
         }
         catch (OperationCanceledException exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new GetUserQueryResult(GetUserQueryResultType.OperationCancelled, default, exception);
+            return new GetUserQueryResult(new ApiCallError(499, exception));
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new GetUserQueryResult(GetUserQueryResultType.InternalServerError, default, exception);
+            return new GetUserQueryResult(new ApiCallError(HttpStatusCode.InternalServerError, exception));
         }
     }
 }
 
-public record GetUserQueryResult(GetUserQueryResultType ResultType, User? Result, Exception? Exception)
+public class GetUserQueryResult : IRequestResult
 {
+    public GetUserQueryResult(GetUserQueryResultStatus status, User? result)
+    {
+        Status = status;
+        Result = result;
+    }
+
+    public GetUserQueryResult(ApiCallError? error)
+    {
+        Status = Fail;
+        Error = error;
+    }
+
+    public GetUserQueryResultStatus Status { get; set; }
+    public User? Result { get; set; }
+    public ApiCallError? Error { get; set; }
+
     public User GetResult()
     {
         Guard.IsNotNull(Result);
-
         return Result;
     }
 
-    public Exception GetException()
+    public ApiCallError GetError()
     {
-        Guard.IsNotNull(Exception);
-
-        return Exception;
+        Guard.IsNotNull(Error);
+        return Error;
     }
 }
 
-public enum GetUserQueryResultType
+public enum GetUserQueryResultStatus
 {
-    UserFound,
-    UserNotFound,
+    Success,
+    Fail,
     OperationCancelled,
     InternalServerError
 }

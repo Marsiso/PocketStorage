@@ -1,4 +1,4 @@
-﻿using PocketStorage.Application.Externals;
+﻿using PocketStorage.Application.External;
 
 namespace PocketStorage.Application.Services;
 

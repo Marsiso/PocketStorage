@@ -149,7 +149,7 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
         authorization ??= await _authorizationManager.CreateAsync(
             identity,
             await _userManager.GetUserIdAsync(user),
-            await _applicationManager.GetIdAsync(application) ?? "",
+            await _applicationManager.GetIdAsync(application) ?? string.Empty,
             AuthorizationTypes.Permanent,
             identity.GetScopes());
 

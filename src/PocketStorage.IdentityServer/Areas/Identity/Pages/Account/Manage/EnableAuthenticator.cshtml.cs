@@ -1,9 +1,11 @@
 ﻿using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
+using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Application.Models;
 using static System.String;
@@ -13,18 +15,19 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 public class EnableAuthenticatorModel : PageModel
 {
     private const string AuthenticatorUriFormat = "otpauth://totp/{0}:{1}?secret={2}&issuer={0}&digits=6";
-    private readonly ILogger<EnableAuthenticatorModel> _logger;
+
     private readonly UrlEncoder _urlEncoder;
     private readonly UserManager<User> _userManager;
+    private readonly IValidator<EnableAuthenticatorInput> _validator;
 
     public EnableAuthenticatorModel(
         UserManager<User> userManager,
-        ILogger<EnableAuthenticatorModel> logger,
-        UrlEncoder urlEncoder)
+        UrlEncoder urlEncoder,
+        IValidator<EnableAuthenticatorInput> validator)
     {
         _userManager = userManager;
-        _logger = logger;
         _urlEncoder = urlEncoder;
+        _validator = validator;
     }
 
     public string? SharedKey { get; set; }
@@ -34,51 +37,49 @@ public class EnableAuthenticatorModel : PageModel
 
     [TempData] public string? StatusMessage { get; set; }
 
-    [BindProperty] public EnableAuthenticatorInput Form { get; set; } = default!;
+    [BindProperty] public EnableAuthenticatorInput Form { get; set; } = null!;
+
+    public Dictionary<string, string[]> Errors { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
         await LoadSharedKeyAndQrCodeUriAsync(user);
-
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
-        if (!ModelState.IsValid)
+        Errors = (await _validator.ValidateAsync(new ValidationContext<EnableAuthenticatorInput>(Form))).DistinctErrorsByProperty();
+        if (Errors.Count > 0)
         {
             await LoadSharedKeyAndQrCodeUriAsync(user);
             return Page();
         }
 
-        string verificationCode = Form.Code.Replace(" ", Empty).Replace("-", Empty);
+        string token = Form.Code.Replace(" ", Empty).Replace("-", Empty);
 
-        bool is2FaTokenValid = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, verificationCode);
-
-        if (!is2FaTokenValid)
+        bool hasValidToken = await _userManager.VerifyTwoFactorTokenAsync(user, _userManager.Options.Tokens.AuthenticatorTokenProvider, token);
+        if (!hasValidToken)
         {
-            ModelState.AddModelError("Input.Code", "Verification code is invalid.");
+            Errors = new Dictionary<string, string[]> { [nameof(Form.Code)] = new[] { "Verification code is invalid." } };
 
             await LoadSharedKeyAndQrCodeUriAsync(user);
-
             return Page();
         }
 
         await _userManager.SetTwoFactorEnabledAsync(user, true);
-        string userId = await _userManager.GetUserIdAsync(user);
-        _logger.LogInformation("User with ID '{UserId}' has enabled 2FA with an authenticator app.", userId);
 
         StatusMessage = "Your authenticator app has been verified.";
 
@@ -87,8 +88,7 @@ public class EnableAuthenticatorModel : PageModel
             return RedirectToPage("./TwoFactorAuthentication");
         }
 
-        IEnumerable<string> recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
-        RecoveryCodes = recoveryCodes.ToArray();
+        RecoveryCodes = (await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10))?.ToArray();
 
         return RedirectToPage("./ShowRecoveryCodes");
     }
@@ -109,7 +109,7 @@ public class EnableAuthenticatorModel : PageModel
         AuthenticatorUri = GenerateQrCodeUri(email, unformattedKey);
     }
 
-    private string FormatKey(string unformattedKey)
+    private static string FormatKey(string unformattedKey)
     {
         StringBuilder result = new();
 

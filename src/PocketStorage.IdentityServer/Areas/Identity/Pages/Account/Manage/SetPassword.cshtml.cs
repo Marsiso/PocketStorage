@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Application.Models;
 
@@ -10,30 +12,30 @@ public class SetPasswordModel : PageModel
 {
     private readonly SignInManager<User> _signInManager;
     private readonly UserManager<User> _userManager;
+    private readonly IValidator<SetPasswordInput> _validator;
 
-    public SetPasswordModel(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager)
+    public SetPasswordModel(UserManager<User> userManager, SignInManager<User> signInManager, IValidator<SetPasswordInput> validator)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _validator = validator;
     }
-
 
     [BindProperty] public SetPasswordInput Form { get; set; } = default!;
 
     [TempData] public string? StatusMessage { get; set; }
 
+    public Dictionary<string, string[]>? Errors { get; set; } = new();
+
     public async Task<IActionResult> OnGetAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
         bool hasPassword = await _userManager.HasPasswordAsync(user);
-
         if (hasPassword)
         {
             return RedirectToPage("./ChangePassword");
@@ -44,25 +46,22 @@ public class SetPasswordModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
+        Errors = (await _validator.ValidateAsync(new ValidationContext<SetPasswordInput>(Form))).DistinctErrorsByProperty();
+        if (Errors.Count > 0)
         {
             return Page();
         }
 
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
-        IdentityResult identityResult = await _userManager.AddPasswordAsync(user, Form.NewPassword);
-        if (!identityResult.Succeeded)
+        IdentityResult result = await _userManager.AddPasswordAsync(user, Form.NewPassword);
+        if (!result.Succeeded)
         {
-            foreach (IdentityError error in identityResult.Errors)
-            {
-                ModelState.AddModelError(string.Empty, error.Description);
-            }
-
+            Errors = new Dictionary<string, string[]> { [nameof(Form.NewPassword)] = result.Errors.Select(error => error.Description).ToArray() };
             return Page();
         }
 

@@ -1,87 +1,89 @@
-﻿using CommunityToolkit.Diagnostics;
+﻿using System.Net;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Exceptions;
+using PocketStorage.Domain.Models;
 using static System.String;
+using static PocketStorage.Core.Application.Queries.GetRoleQueryStatus;
 
 namespace PocketStorage.Core.Application.Queries;
 
-public record GetRoleQuery(string? Id) : IRequest<GetRoleQueryResult>;
+public class GetRoleQuery : IRequest<GetRoleQueryResult>
+{
+    public GetRoleQuery(string? name) => Name = name;
+
+    public string? Name { get; set; }
+}
 
 public class GetRoleQueryHandler : IRequestHandler<GetRoleQuery, GetRoleQueryResult>
 {
-    public static readonly Func<DataContext, string, Task<Role?>> Query = EF.CompileAsyncQuery((DataContext databaseContext, string id) =>
-        databaseContext.Roles.AsNoTracking()
-            .SingleOrDefault(entity => entity.Id == id));
+    private static readonly Func<DataContext, string, Task<Role?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string name) =>
+        context.Roles.AsNoTracking().SingleOrDefault(entity => entity.Name == name));
 
-    private readonly DataContext _databaseContext;
-    private readonly ILogger<GetRoleQueryHandler> _logger;
+    private readonly DataContext _context;
 
-    public GetRoleQueryHandler(DataContext databaseContext, ILogger<GetRoleQueryHandler> logger)
-    {
-        _databaseContext = databaseContext;
-        _logger = logger;
-    }
+    public GetRoleQueryHandler(DataContext context) => _context = context;
 
     public async Task<GetRoleQueryResult> Handle(GetRoleQuery request, CancellationToken cancellationToken)
     {
         try
         {
-            Role? originalRole = default;
-
-            if (!IsNullOrWhiteSpace(request.Id))
+            if (IsNullOrWhiteSpace(request.Name))
             {
-                originalRole = await Query(_databaseContext, request.Id);
+                return new GetRoleQueryResult(new ApiCallError(new EntityNotFoundException(request.Name, nameof(Role))));
             }
 
-            if (originalRole is not null)
+            Role? role = await CompiledQuery(_context, request.Name);
+            if (role != null)
             {
-                return new GetRoleQueryResult(GetRoleQueryResultType.RoleFound, originalRole, default);
+                return new GetRoleQueryResult(role);
             }
 
-            EntityNotFoundException exception = new(request.Id, nameof(Role));
-
-            return new GetRoleQueryResult(GetRoleQueryResultType.RoleNotFound, default, exception);
+            return new GetRoleQueryResult(new ApiCallError(HttpStatusCode.NotFound, new EntityNotFoundException(request.Name, nameof(Role))));
         }
         catch (OperationCanceledException exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new GetRoleQueryResult(GetRoleQueryResultType.OperationCancelled, default, exception);
+            return new GetRoleQueryResult(OperationCancelled, new ApiCallError(499, exception));
         }
         catch (Exception exception)
         {
-            _logger.LogError(exception.ToString());
-
-            return new GetRoleQueryResult(GetRoleQueryResultType.InternalServerError, default, exception);
+            return new GetRoleQueryResult(OperationCancelled, new ApiCallError(HttpStatusCode.InternalServerError, exception));
         }
     }
 }
 
-public record GetRoleQueryResult(GetRoleQueryResultType ResultType, Role? Result, Exception? Exception)
+public class GetRoleQueryResult : IRequestResult
 {
-    public Role GetResult()
+    public GetRoleQueryResult(Role? result)
     {
-        Guard.IsNotNull(Result);
-
-        return Result;
+        Status = Success;
+        Result = result;
     }
 
-    public Exception GetException()
+    public GetRoleQueryResult(GetRoleQueryStatus status, ApiCallError? error)
     {
-        Guard.IsNotNull(Exception);
-
-        return Exception;
+        Status = status;
+        Error = error;
     }
+
+    public GetRoleQueryResult(ApiCallError? error)
+    {
+        Status = Fail;
+        Error = error;
+    }
+
+    public GetRoleQueryStatus Status { get; set; }
+    public Role? Result { get; set; }
+    public ApiCallError? Error { get; set; }
 }
 
-public enum GetRoleQueryResultType
+public enum GetRoleQueryStatus
 {
-    RoleFound,
-    RoleNotFound,
+    Success,
+    Fail,
     OperationCancelled,
     InternalServerError
 }

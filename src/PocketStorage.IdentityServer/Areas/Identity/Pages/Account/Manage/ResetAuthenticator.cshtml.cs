@@ -7,18 +7,13 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class ResetAuthenticatorModel : PageModel
 {
-    private readonly ILogger<ResetAuthenticatorModel> _logger;
     private readonly SignInManager<User> _signInManager;
     private readonly UserManager<User> _userManager;
 
-    public ResetAuthenticatorModel(
-        UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        ILogger<ResetAuthenticatorModel> logger)
+    public ResetAuthenticatorModel(UserManager<User> userManager, SignInManager<User> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _logger = logger;
     }
 
     [TempData] public string? StatusMessage { get; set; }
@@ -26,8 +21,7 @@ public class ResetAuthenticatorModel : PageModel
     public async Task<IActionResult> OnGet()
     {
         User? user = await _userManager.GetUserAsync(User);
-
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -38,19 +32,13 @@ public class ResetAuthenticatorModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
         await _userManager.SetTwoFactorEnabledAsync(user, false);
         await _userManager.ResetAuthenticatorKeyAsync(user);
-
-        string userId = await _userManager.GetUserIdAsync(user);
-
-        _logger.LogInformation("User with ID '{UserId}' has reset their authentication app key.", user.Id);
-
         await _signInManager.RefreshSignInAsync(user);
 
         StatusMessage = "Your authenticator app key has been reset, you will need to configure your authenticator app using the new key.";
