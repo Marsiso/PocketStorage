@@ -6,6 +6,17 @@ h1:focus {
     outline: none;
 }
 
+.fa-solid, .fa-brands {
+    width: 1.5rem;
+}
+
+.navbar-toggler:focus,
+.navbar-toggler:active,
+.navbar-toggler-icon:focus {
+    outline: none;
+    box-shadow: none;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;

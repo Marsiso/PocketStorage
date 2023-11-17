@@ -24,7 +24,7 @@ public class VerifyPermissionsQuery : IRequest<VerifyPermissionsQueryResult>, IE
 public class VerifyPermissionsQueryHandler : IRequestHandler<VerifyPermissionsQuery, VerifyPermissionsQueryResult>
 {
     public static readonly Func<DataContext, IList<string>, IAsyncEnumerable<Role>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, IList<string> roles) =>
-        context.Roles.AsNoTracking().Where(entity => roles.Contains(entity.Name)));
+        context.Roles.AsNoTracking().Where(role => roles.Contains(role.Name)));
 
     private readonly DataContext _context;
     private readonly IMediator _mediator;

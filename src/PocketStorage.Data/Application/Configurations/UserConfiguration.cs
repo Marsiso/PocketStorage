@@ -27,5 +27,29 @@ public class UserConfiguration : ChangeTrackingEntityConfiguration<User>
             .HasForeignKey(entity => entity.UserId)
             .IsRequired()
             .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(entity => entity.Claims)
+            .WithOne()
+            .HasForeignKey(uc => uc.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(entity => entity.Logins)
+            .WithOne()
+            .HasForeignKey(ul => ul.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(entity => entity.Tokens)
+            .WithOne()
+            .HasForeignKey(ut => ut.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
+
+        builder.HasMany(entity => entity.UserRoles)
+            .WithOne()
+            .HasForeignKey(ur => ur.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

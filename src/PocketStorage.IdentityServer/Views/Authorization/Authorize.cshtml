@@ -1,4 +1,5 @@
 ﻿@using Microsoft.Extensions.Primitives
+@using PocketStorage.Application.Extensions
 @model AuthorizeViewModel
 @{
     ViewData["Title"] = "Authorization";
@@ -9,7 +10,7 @@
 </div>
 <div class="row justify-content-center">
     <div class="col-12 text-center" style="max-width: 30rem;">
-        <p class="lead">Do you want to grant <strong>@Model.ApplicationName</strong> access to your data?</p>
+        <p class="lead">Do you want to grant application access to your data?</p>
     </div>
     <div class="col-12 d-flex justify-content-center">
         <div style="max-width: 30rem;">
@@ -24,10 +25,34 @@
         </div>
     </div>
     <div class="col-12 text-center">
-        @foreach (var scope in Model.Scope.Split(" "))
+        <p class="lead">
+            <strong>Application</strong>
+        </p>
+        <p class="lead">Name</p>
+        <p>
+            <code>@Model.ApplicationName</code>
+        </p>
+        <p class="lead">Host</p>
+        <p>
+            <code>@Model.Host</code>
+        </p>
+    </div>
+    <div class="col-12 text-center">
+        <p class="lead">
+            <strong>Scopes</strong>
+        </p>
+        @foreach (var scope in OpenIddictScopeHelpers.GetIncludedClaimNamesFrom(Model.Scopes, " "))
         {
-            <p class="lead">@scope</p>
-            <p>claim claim claim</p>
+            <p class="lead">@scope.Key</p>
+            @if (scope.Value.Length > 0)
+            {
+                <p>
+                    @foreach (var claim in scope.Value)
+                    {
+                        <code>@claim&nbsp;</code>
+                    }
+                </p>
+            }
         }
     </div>
     <div class="col-12">

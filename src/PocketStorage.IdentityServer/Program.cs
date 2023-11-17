@@ -13,6 +13,7 @@ using PocketStorage.Core.Pipelines;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Constants;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -61,8 +62,12 @@ services.AddOpenIddict()
         builder.SetIntrospectionEndpointUris("/connect/introspect");
         builder.SetVerificationEndpointUris("/connect/verify");
 
-        // Mark the "email", "profile" and "roles" scopes as supported scopes.
-        builder.RegisterScopes(OpenIddictConstants.Scopes.Email, OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Roles);
+        // Mark the "profile.name", "profile.email", ... as supported scopes.
+        builder.RegisterScopes(OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Roles, OpenIddictScopeDefaults.Name, OpenIddictScopeDefaults.Email, OpenIddictScopeDefaults.PhoneNumber, OpenIddictScopeDefaults.Locale, OpenIddictScopeDefaults.Zoneinfo, OpenIddictScopeDefaults.UpdatedAt);
+
+        // Mark the "name", "given_name", ... as supported claims.
+        builder.RegisterClaims(OpenIddictConstants.Claims.Name, OpenIddictConstants.Claims.Username, OpenIddictConstants.Claims.GivenName, OpenIddictConstants.Claims.MiddleName, OpenIddictConstants.Claims.FamilyName, OpenIddictConstants.Claims.Email, OpenIddictConstants.Claims.EmailVerified,
+            OpenIddictConstants.Claims.PhoneNumber, OpenIddictConstants.Claims.PhoneNumberVerified, OpenIddictConstants.Claims.Role, OpenIddictConstants.Claims.Locale, OpenIddictConstants.Claims.Zoneinfo, OpenIddictConstants.Claims.UpdatedAt);
 
         // Enable the client credentials flow
         builder.AllowClientCredentialsFlow();

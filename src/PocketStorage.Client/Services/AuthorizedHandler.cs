@@ -9,13 +9,11 @@ public sealed class AuthorizedHandler : DelegatingHandler
 
     public AuthorizedHandler(HostAuthenticationStateProvider authenticationStateProvider) => _authenticationStateProvider = authenticationStateProvider;
 
-    protected override async Task<HttpResponseMessage> SendAsync(
-        HttpRequestMessage request,
-        CancellationToken cancellationToken)
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         AuthenticationState authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
         HttpResponseMessage responseMessage;
-        if (authState.User.Identity != null && !authState.User.Identity.IsAuthenticated)
+        if (authState.User.Identity is { IsAuthenticated: false })
         {
             // If user is not authenticated, immediately set response status to 401 Unauthorized.
             responseMessage = new HttpResponseMessage(HttpStatusCode.Unauthorized);

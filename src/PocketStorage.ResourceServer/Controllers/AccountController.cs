@@ -19,9 +19,5 @@ public class AccountController : ApiControllerBase<AccountController>
     [ValidateAntiForgeryToken]
     [Authorize]
     [HttpPost("~/api/account/logout")]
-    public IActionResult Logout() =>
-        SignOut(
-            new AuthenticationProperties { RedirectUri = "/" },
-            CookieAuthenticationDefaults.AuthenticationScheme,
-            OpenIdConnectDefaults.AuthenticationScheme);
+    public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme);
 }

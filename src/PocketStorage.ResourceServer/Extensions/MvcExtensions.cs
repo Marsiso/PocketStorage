@@ -6,12 +6,5 @@ namespace PocketStorage.ResourceServer.Extensions;
 
 public static class MvcExtensions
 {
-    public static void Configure(this MvcOptions options)
-    {
-        AuthorizationPolicyBuilder policyBuilder = new AuthorizationPolicyBuilder().RequireAuthenticatedUser();
-
-        AuthorizationPolicy policy = policyBuilder.Build();
-
-        options.Filters.Add(new AuthorizeFilter(policy));
-    }
+    public static void Configure(this MvcOptions options) => options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +12,7 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Constants;
 using PocketStorage.IdentityServer.Controllers.Common;
 using PocketStorage.IdentityServer.Filters;
 using PocketStorage.IdentityServer.Models;
@@ -50,8 +52,12 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
             switch (claim.Type)
             {
                 case Claims.Name:
+                case Claims.Username:
+                case Claims.GivenName:
+                case Claims.MiddleName:
+                case Claims.FamilyName:
                     yield return Destinations.AccessToken;
-                    if (claim.Subject.HasScope(Scopes.Profile))
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.Name))
                     {
                         yield return Destinations.IdentityToken;
                     }
@@ -59,9 +65,21 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
                     yield break;
 
                 case Claims.Email:
+                case Claims.EmailVerified:
                     yield return Destinations.AccessToken;
 
-                    if (claim.Subject.HasScope(Scopes.Email))
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.Email))
+                    {
+                        yield return Destinations.IdentityToken;
+                    }
+
+                    yield break;
+
+                case Claims.PhoneNumber:
+                case Claims.PhoneNumberVerified:
+                    yield return Destinations.AccessToken;
+
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.PhoneNumber))
                     {
                         yield return Destinations.IdentityToken;
                     }
@@ -72,6 +90,36 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
                     yield return Destinations.AccessToken;
 
                     if (claim.Subject.HasScope(Scopes.Roles))
+                    {
+                        yield return Destinations.IdentityToken;
+                    }
+
+                    yield break;
+
+                case Claims.Locale:
+                    yield return Destinations.AccessToken;
+
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.Locale))
+                    {
+                        yield return Destinations.IdentityToken;
+                    }
+
+                    yield break;
+
+                case Claims.Zoneinfo:
+                    yield return Destinations.AccessToken;
+
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.Zoneinfo))
+                    {
+                        yield return Destinations.IdentityToken;
+                    }
+
+                    yield break;
+
+                case Claims.UpdatedAt:
+                    yield return Destinations.AccessToken;
+
+                    if (claim.Subject.HasScope(OpenIddictScopeDefaults.UpdatedAt))
                     {
                         yield return Destinations.IdentityToken;
                     }
@@ -134,7 +182,17 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
         // Add the claims that will be persisted in the tokens
         identity.SetClaim(Claims.Subject, await _userManager.GetUserIdAsync(user));
         identity.SetClaim(Claims.Email, await _userManager.GetEmailAsync(user));
+        identity.SetClaim(Claims.EmailVerified, await _userManager.IsEmailConfirmedAsync(user));
+        identity.SetClaim(Claims.PhoneNumber, await _userManager.GetPhoneNumberAsync(user));
+        identity.SetClaim(Claims.PhoneNumberVerified, await _userManager.IsPhoneNumberConfirmedAsync(user));
         identity.SetClaim(Claims.Name, await _userManager.GetUserNameAsync(user));
+        identity.SetClaim(Claims.Username, await _userManager.GetUserNameAsync(user));
+        identity.SetClaim(Claims.GivenName, user.GivenName);
+        identity.SetClaim(Claims.MiddleName, string.Empty);
+        identity.SetClaim(Claims.FamilyName, user.FamilyName);
+        identity.SetClaim(Claims.Locale, user.Culture);
+        identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
+        identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
         identity.SetClaims(Claims.Role, (await _userManager.GetRolesAsync(user)).ToImmutableArray());
 
         // Note: in this sample, the granted scopes match the requested scope but you may want to
@@ -237,7 +295,17 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
                 // Add the claims that will be persisted in the tokens.
                 identity.SetClaim(Claims.Subject, await _userManager.GetUserIdAsync(user));
                 identity.SetClaim(Claims.Email, await _userManager.GetEmailAsync(user));
+                identity.SetClaim(Claims.EmailVerified, await _userManager.IsEmailConfirmedAsync(user));
+                identity.SetClaim(Claims.PhoneNumber, await _userManager.GetPhoneNumberAsync(user));
+                identity.SetClaim(Claims.PhoneNumberVerified, await _userManager.IsPhoneNumberConfirmedAsync(user));
                 identity.SetClaim(Claims.Name, await _userManager.GetUserNameAsync(user));
+                identity.SetClaim(Claims.Username, await _userManager.GetUserNameAsync(user));
+                identity.SetClaim(Claims.GivenName, user.GivenName);
+                identity.SetClaim(Claims.MiddleName, string.Empty);
+                identity.SetClaim(Claims.FamilyName, user.FamilyName);
+                identity.SetClaim(Claims.Locale, user.Culture);
+                identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
+                identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
                 identity.SetClaims(Claims.Role, (await _userManager.GetRolesAsync(user)).ToImmutableArray());
 
                 // Note: in this sample, the granted scopes match the requested scope but you may
@@ -271,7 +339,7 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
 
             // In every other case, render the consent form
             default:
-                return View(new AuthorizeViewModel { ApplicationName = await _applicationManager.GetLocalizedDisplayNameAsync(application), Scope = request.Scope });
+                return View(new AuthorizeViewModel { ApplicationName = await _applicationManager.GetLocalizedDisplayNameAsync(application), Host = HttpContext.Request.Host.Value, Scopes = request.Scope });
         }
     }
 
@@ -319,7 +387,17 @@ public class AuthorizationController : WebControllerBase<AuthorizationController
             // authorization code/refresh token was issued.
             identity.SetClaim(Claims.Subject, await _userManager.GetUserIdAsync(user));
             identity.SetClaim(Claims.Email, await _userManager.GetEmailAsync(user));
+            identity.SetClaim(Claims.EmailVerified, await _userManager.IsEmailConfirmedAsync(user));
+            identity.SetClaim(Claims.PhoneNumber, await _userManager.GetPhoneNumberAsync(user));
+            identity.SetClaim(Claims.PhoneNumberVerified, await _userManager.IsPhoneNumberConfirmedAsync(user));
             identity.SetClaim(Claims.Name, await _userManager.GetUserNameAsync(user));
+            identity.SetClaim(Claims.Username, await _userManager.GetUserNameAsync(user));
+            identity.SetClaim(Claims.GivenName, user.GivenName);
+            identity.SetClaim(Claims.MiddleName, string.Empty);
+            identity.SetClaim(Claims.FamilyName, user.FamilyName);
+            identity.SetClaim(Claims.Locale, user.Culture);
+            identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
+            identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
             identity.SetClaims(Claims.Role, (await _userManager.GetRolesAsync(user)).ToImmutableArray());
 
             identity.SetDestinations(GetDestinations);

@@ -12,6 +12,10 @@ public class User : IdentityUser, IChangeTrackingEntity
     public string Culture { get; set; } = CultureDefaults.Default;
     public string? ProfilePhoto { get; set; }
     public ICollection<Folder>? Folders { get; set; }
+    public ICollection<IdentityUserClaim<string>> Claims { get; set; }
+    public ICollection<IdentityUserLogin<string>> Logins { get; set; }
+    public ICollection<IdentityUserToken<string>> Tokens { get; set; }
+    public ICollection<IdentityUserRole<string>> UserRoles { get; set; }
     public bool IsActive { get; set; }
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }

@@ -20,7 +20,7 @@ public class GetUserQuery : IRequest<GetUserQueryResult>, IEmailRequest
 public class GetUserQueryHandler : IRequestHandler<GetUserQuery, GetUserQueryResult>
 {
     public static readonly Func<DataContext, string, Task<User?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string email) =>
-        context.Users.AsNoTracking().SingleOrDefault(entity => entity.Email == email));
+        context.Users.AsNoTracking().SingleOrDefault(user => user.Email == email));
 
     private readonly DataContext _context;
 

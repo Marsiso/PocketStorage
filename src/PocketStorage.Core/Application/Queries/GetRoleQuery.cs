@@ -21,7 +21,7 @@ public class GetRoleQuery : IRequest<GetRoleQueryResult>
 public class GetRoleQueryHandler : IRequestHandler<GetRoleQuery, GetRoleQueryResult>
 {
     private static readonly Func<DataContext, string, Task<Role?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string name) =>
-        context.Roles.AsNoTracking().SingleOrDefault(entity => entity.Name == name));
+        context.Roles.AsNoTracking().SingleOrDefault(role => role.Name == name));
 
     private readonly DataContext _context;
 

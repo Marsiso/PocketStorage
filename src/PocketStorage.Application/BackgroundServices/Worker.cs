@@ -141,9 +141,14 @@ public class Worker : IHostedService
                     OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
                     OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
                     OpenIddictConstants.Permissions.ResponseTypes.Code,
-                    OpenIddictConstants.Permissions.Scopes.Email,
                     OpenIddictConstants.Permissions.Scopes.Profile,
                     OpenIddictConstants.Permissions.Scopes.Roles,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Name,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Email,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.PhoneNumber,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Locale,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Zoneinfo,
+                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.UpdatedAt,
                     OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess
                 },
                 Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange }

@@ -14,11 +14,9 @@ public class UserController : ApiControllerBase<UserController>
     {
     }
 
-    [HttpGet("~/api/user")]
+    [HttpGet("~/api/userinfo")]
     [AllowAnonymous]
-    [Produces(MediaTypeNames.Application.Json)]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(UserInfo), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
     public IActionResult GetCurrentUser()
     {
         if (!User.Identity?.IsAuthenticated ?? true)
@@ -26,45 +24,34 @@ public class UserController : ApiControllerBase<UserController>
             return Ok(UserInfo.Anonymous);
         }
 
-        UserInfo userInfo = new() { IsAuthenticated = true };
-
-        if (User?.Identity is ClaimsIdentity claimsIdentity)
+        UserInfo userinfo = new() { IsAuthenticated = true };
+        if (User.Identity is ClaimsIdentity identity)
         {
-            userInfo.NameClaimType = claimsIdentity.NameClaimType;
-            userInfo.RoleClaimType = claimsIdentity.RoleClaimType;
+            userinfo.NameClaimType = identity.NameClaimType;
+            userinfo.RoleClaimType = identity.RoleClaimType;
         }
         else
         {
-            userInfo.NameClaimType = ClaimTypes.Name;
-            userInfo.RoleClaimType = ClaimTypes.Role;
+            userinfo.NameClaimType = ClaimTypes.Name;
+            userinfo.RoleClaimType = ClaimTypes.Role;
         }
 
-        if (User?.Claims?.Any() ?? false)
+        if (!User.Claims.Any())
         {
-            IList<ClaimValue> claims = new List<ClaimValue>();
-            foreach (Claim claim in User.Claims)
+            return Ok(userinfo);
+        }
+
+        userinfo.Claims = new List<ClaimValue>();
+        foreach (Claim claim in User.Claims)
+        {
+            if (claim.Type == Claims.UpdatedAt)
             {
-                if (claim.Type.Equals(userInfo.NameClaimType, StringComparison.OrdinalIgnoreCase))
-                {
-                    claims.Add(new ClaimValue(userInfo.NameClaimType, claim.Value));
-                }
-                else if (claim.Type.Equals(userInfo.RoleClaimType, StringComparison.OrdinalIgnoreCase))
-                {
-                    claims.Add(new ClaimValue(userInfo.RoleClaimType, claim.Value));
-                }
-                else if (claim.Type.Equals(Claims.GivenName, StringComparison.OrdinalIgnoreCase))
-                {
-                    claims.Add(new ClaimValue(Claims.GivenName, claim.Value));
-                }
-                else if (claim.Type.Equals(Claims.FamilyName, StringComparison.OrdinalIgnoreCase))
-                {
-                    claims.Add(new ClaimValue(Claims.FamilyName, claim.Value));
-                }
+                continue;
             }
 
-            userInfo.Claims = claims;
+            userinfo.Claims.Add(new ClaimValue(claim.Type, claim.Value));
         }
 
-        return Ok(userInfo);
+        return Ok(userinfo);
     }
 }
