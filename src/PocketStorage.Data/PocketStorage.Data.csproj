@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -13,12 +13,12 @@
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Diagnostics" Version="8.2.2"/>
     <PackageReference Include="CommunityToolkit.HighPerformance" Version="8.2.2"/>
-    <PackageReference Include="EFCore.NamingConventions" Version="7.0.2"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.13"/>
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.13"/>
-    <PackageReference Include="Npgsql" Version="7.0.6"/>
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.11"/>
-    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="4.9.0"/>
+    <PackageReference Include="EFCore.NamingConventions" Version="8.0.0-rc.2"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0"/>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.0"/>
+    <PackageReference Include="Npgsql" Version="8.0.0-rc.2"/>
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0-rc.2"/>
+    <PackageReference Include="OpenIddict.EntityFrameworkCore" Version="4.10.0"/>
   </ItemGroup>
 
   <ItemGroup>

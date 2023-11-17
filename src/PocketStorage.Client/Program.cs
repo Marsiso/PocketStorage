@@ -11,7 +11,6 @@ using PocketStorage.Domain.Constants;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-
 IServiceCollection services = builder.Services;
 IConfiguration configuration = builder.Configuration;
 

@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using OpenIddict.Abstractions
+@using PocketStorage.Domain.Constants
 @namespace PocketStorage.ResourceServer.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
@@ -6,7 +8,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@(User.Claims.SingleOrDefault(claim => claim.Type == OpenIddictConstants.Claims.Locale)?.Value ?? CultureDefaults.Default)">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
