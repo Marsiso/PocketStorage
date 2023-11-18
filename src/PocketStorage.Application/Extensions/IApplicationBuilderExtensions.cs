@@ -1,8 +1,9 @@
-﻿using Microsoft.Net.Http.Headers;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.Net.Http.Headers;
 
-namespace PocketStorage.ResourceServer.Extensions;
+namespace PocketStorage.Application.Extensions;
 
-public static class BuilderExtensions
+public static class IApplicationBuilderExtensions
 {
     public static IApplicationBuilder UseNoUnauthorizedRedirect(this IApplicationBuilder applicationBuilder, params string[] segments)
     {

@@ -5,7 +5,7 @@ namespace PocketStorage.Application.Extensions;
 
 public static class IdentityOptionsExtensions
 {
-    public static void Configure(this IdentityOptions options)
+    public static IdentityOptions Configure(this IdentityOptions options)
     {
         options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
         options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
@@ -27,5 +27,7 @@ public static class IdentityOptionsExtensions
 
         options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
         options.User.RequireUniqueEmail = true;
+
+        return options;
     }
 }

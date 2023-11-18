@@ -14,19 +14,15 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace PocketStorage.IdentityServer.Controllers;
 
-public class UserInfoController : WebControllerBase<UserInfoController>
+public class UserInfoController(UserManager<User> userManager) : WebControllerBase<UserInfoController>
 {
-    private readonly UserManager<User> _userManager;
-
-    public UserInfoController(UserManager<User> userManager) => _userManager = userManager;
-
     [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
     [HttpGet("~/connect/userinfo")]
     [HttpPost("~/connect/userinfo")]
     [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
     public async Task<IActionResult> Userinfo()
     {
-        User? user = await _userManager.FindByIdAsync(User.GetClaim(Claims.Subject) ?? string.Empty);
+        User? user = await userManager.FindByIdAsync(User.GetClaim(Claims.Subject) ?? string.Empty);
         if (user is null)
         {
             return Challenge(
@@ -47,7 +43,7 @@ public class UserInfoController : WebControllerBase<UserInfoController>
         Dictionary<string, object> claims = new(StringComparer.Ordinal)
         {
             // Note: the "sub" claim is a mandatory claim and must be included in the JSON response.
-            [Claims.Subject] = await _userManager.GetUserIdAsync(user)
+            [Claims.Subject] = await userManager.GetUserIdAsync(user)
         };
 
         ImmutableArray<string> scopes = User.GetScopes();
@@ -56,25 +52,25 @@ public class UserInfoController : WebControllerBase<UserInfoController>
             switch (scope)
             {
                 case OpenIddictScopeDefaults.Name:
-                    claims[Claims.Name] = await _userManager.GetUserNameAsync(user);
-                    claims[Claims.Username] = await _userManager.GetUserNameAsync(user);
+                    claims[Claims.Name] = await userManager.GetUserNameAsync(user);
+                    claims[Claims.Username] = await userManager.GetUserNameAsync(user);
                     claims[Claims.GivenName] = user.GivenName;
                     claims[Claims.MiddleName] = string.Empty;
                     claims[Claims.FamilyName] = user.FamilyName;
                     break;
 
                 case OpenIddictScopeDefaults.Email:
-                    claims[Claims.Email] = await _userManager.GetEmailAsync(user) ?? string.Empty;
-                    claims[Claims.EmailVerified] = await _userManager.IsEmailConfirmedAsync(user);
+                    claims[Claims.Email] = await userManager.GetEmailAsync(user) ?? string.Empty;
+                    claims[Claims.EmailVerified] = await userManager.IsEmailConfirmedAsync(user);
                     break;
 
                 case OpenIddictScopeDefaults.PhoneNumber:
-                    claims[Claims.PhoneNumber] = await _userManager.GetPhoneNumberAsync(user);
-                    claims[Claims.PhoneNumberVerified] = await _userManager.IsPhoneNumberConfirmedAsync(user);
+                    claims[Claims.PhoneNumber] = await userManager.GetPhoneNumberAsync(user);
+                    claims[Claims.PhoneNumberVerified] = await userManager.IsPhoneNumberConfirmedAsync(user);
                     break;
 
                 case Scopes.Roles:
-                    claims[Claims.Role] = await _userManager.GetRolesAsync(user);
+                    claims[Claims.Role] = await userManager.GetRolesAsync(user);
                     break;
 
                 case OpenIddictScopeDefaults.Locale:

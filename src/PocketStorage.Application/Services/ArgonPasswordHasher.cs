@@ -7,11 +7,10 @@ using PocketStorage.Application.External;
 
 namespace PocketStorage.Application.Services;
 
-public class ArgonPasswordHasher<TUser> : IPasswordHasher<TUser> where TUser : IdentityUser
+public class ArgonPasswordHasher<TUser>(IOptions<ArgonPasswordHasherOptions> options) : IPasswordHasher<TUser>
+    where TUser : IdentityUser
 {
-    public ArgonPasswordHasher(IOptions<ArgonPasswordHasherOptions> options) => Options = options.Value;
-
-    public ArgonPasswordHasherOptions Options { get; set; }
+    public ArgonPasswordHasherOptions Options { get; set; } = options.Value;
 
     public string HashPassword(TUser user, string password)
     {

@@ -2,7 +2,7 @@
 
 public static class RoleDefaults
 {
-    public const string Administrator = nameof(Administrator);
-    public const string Manager = nameof(Manager);
-    public const string Default = nameof(Default);
+    public const string Administrator = "administrator";
+    public const string Manager = "manager";
+    public const string Default = "default";
 }

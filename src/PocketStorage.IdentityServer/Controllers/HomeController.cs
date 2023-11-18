@@ -1,15 +1,12 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using PocketStorage.IdentityServer.Controllers.Common;
 using PocketStorage.IdentityServer.Models;
 
 namespace PocketStorage.IdentityServer.Controllers;
 
-public class HomeController : Controller
+public class HomeController : WebControllerBase<HomeController>
 {
-    private readonly ILogger<HomeController> _logger;
-
-    public HomeController(ILogger<HomeController> logger) => _logger = logger;
-
     public IActionResult Index() => View();
 
     public IActionResult Privacy() => View();

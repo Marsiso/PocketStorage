@@ -1,158 +1,114 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using OpenIddict.Abstractions;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
-using PocketStorage.Domain.Constants;
 using PocketStorage.Domain.Exceptions;
+using PocketStorage.Domain.Options;
 
 namespace PocketStorage.Application.BackgroundServices;
 
-public class Worker : IHostedService
+public class Worker(IServiceProvider serviceProvider) : IHostedService
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public Worker(IServiceProvider serviceProvider) => _serviceProvider = serviceProvider;
-
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await using AsyncServiceScope scope = _serviceProvider.CreateAsyncScope();
+        await using AsyncServiceScope scope = serviceProvider.CreateAsyncScope();
         await using DataContext context = scope.ServiceProvider.GetRequiredService<DataContext>();
-        IConfiguration configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
         IOpenIddictApplicationManager applicationManager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
-        UserManager<User> userManager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
+        ApplicationSettings settings = scope.ServiceProvider.GetRequiredService<ApplicationSettings>();
+        UserManager<User> manager = scope.ServiceProvider.GetRequiredService<UserManager<User>>();
 
         await context.Database.MigrateAsync(cancellationToken);
-        await GenerateUserData(userManager, cancellationToken);
-        await GenerateBlazorWebAssemblyClientData(configuration, applicationManager, cancellationToken);
+        await GenerateAspNetIdentityUsers(settings, manager, cancellationToken);
+        await GenerateOpenIdConnectClients(settings, applicationManager, cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 
-    private static async Task GenerateUserData(UserManager<User> manager, CancellationToken cancellationToken)
+    private static async Task GenerateAspNetIdentityUsers(ApplicationSettings settings, UserManager<User> manager, CancellationToken cancellationToken)
     {
-        if (!await manager.Users.AnyAsync(user => user.Email == "system.administrator@prov.dev", cancellationToken))
+        foreach (AspNetIdentityUserSettings user in settings.AspNet.Identity.Users)
         {
+            User? originalUser = await manager.FindByEmailAsync(user.Email);
+            if (originalUser != null)
+            {
+                await manager.DeleteAsync(originalUser);
+            }
+
             await manager.CreateAsync(new User
             {
-                GivenName = "System",
-                FamilyName = RoleDefaults.Administrator,
-                UserName = "system.administrator@prov.dev",
-                Email = "system.administrator@prov.dev",
-                Culture = CultureDefaults.Default
+                GivenName = user.GivenName,
+                FamilyName = user.FamilyName,
+                UserName = user.Email,
+                Email = user.Email,
+                EmailConfirmed = user.EmailVerified,
+                PhoneNumber = user.PhoneNumber,
+                PhoneNumberConfirmed = user.PhoneNumberVerified,
+                Culture = user.Locale
             });
 
-            User user = await manager.FindByEmailAsync("system.administrator@prov.dev") ?? throw new EntityNotFoundException("system.administrator@prov.dev", nameof(User));
+            User createdUser = await manager.FindByEmailAsync(user.Email) ?? throw new EntityNotFoundException(user.Email, nameof(User));
 
-            await manager.AddPasswordAsync(user, "Password123$");
+            await manager.AddPasswordAsync(createdUser, user.Password);
 
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Administrator))
+            foreach (string role in user.Roles)
             {
-                await manager.AddToRoleAsync(user, RoleDefaults.Administrator);
-            }
-
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Manager))
-            {
-                await manager.AddToRoleAsync(user, RoleDefaults.Manager);
-            }
-
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Default))
-            {
-                await manager.AddToRoleAsync(user, RoleDefaults.Default);
-            }
-        }
-
-        if (!await manager.Users.AnyAsync(user => user.Email == "system.manager@prov.dev", cancellationToken))
-        {
-            await manager.CreateAsync(new User
-            {
-                GivenName = "System",
-                FamilyName = RoleDefaults.Manager,
-                UserName = "system.manager@prov.dev",
-                Email = "system.manager@prov.dev",
-                Culture = CultureDefaults.Default
-            });
-
-            User user = await manager.FindByEmailAsync("system.manager@prov.dev") ?? throw new EntityNotFoundException("system.administrator@prov.dev", nameof(User));
-
-            await manager.AddPasswordAsync(user, "Password123$");
-
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Manager))
-            {
-                await manager.AddToRoleAsync(user, RoleDefaults.Manager);
-            }
-
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Default))
-            {
-                await manager.AddToRoleAsync(user, RoleDefaults.Default);
-            }
-        }
-
-        if (!await manager.Users.AnyAsync(user => user.Email == "system.default@prov.dev", cancellationToken))
-        {
-            await manager.CreateAsync(new User
-            {
-                GivenName = "System",
-                FamilyName = RoleDefaults.Default,
-                UserName = "system.default@prov.dev",
-                Email = "system.default@prov.dev",
-                Culture = CultureDefaults.Default
-            });
-
-            User user = await manager.FindByEmailAsync("system.default@prov.dev") ?? throw new EntityNotFoundException("system.administrator@prov.dev", nameof(User));
-
-            await manager.AddPasswordAsync(user, "Password123$");
-
-            if (!await manager.IsInRoleAsync(user, RoleDefaults.Default))
-            {
-                await manager.AddToRoleAsync(user, RoleDefaults.Default);
+                await manager.AddToRoleAsync(createdUser, role);
             }
         }
     }
 
-    private static async Task GenerateBlazorWebAssemblyClientData(IConfiguration configuration, IOpenIddictApplicationManager applicationManager, CancellationToken cancellationToken)
+    private static async Task GenerateOpenIdConnectClients(ApplicationSettings settings, IOpenIddictApplicationManager applicationManager, CancellationToken cancellationToken)
     {
-        string? clientId = configuration["OpenIdConnect:Clients:BlazorWebAssembly:ClientId"];
-        string? clientSecret = configuration["OpenIdConnect:Clients:BlazorWebAssembly:ClientSecret"];
-        string? clientDisplayName = configuration["OpenIdConnect:Clients:BlazorWebAssembly:DisplayName"];
-        string? redirectUri = configuration["OpenIdConnect:Clients:BlazorWebAssembly:RedirectUri"];
-        string? postLogoutRedirectUri = configuration["OpenIdConnect:Clients:BlazorWebAssembly:PostLogoutRedirectUri"];
-
-        object? client = await applicationManager.FindByClientIdAsync(clientId, cancellationToken);
-        if (client == null)
+        foreach (OpenIdConnectClientSettings client in settings.OpenIdConnect.Clients)
         {
-            await applicationManager.CreateAsync(new OpenIddictApplicationDescriptor
+            object? application = await applicationManager.FindByClientIdAsync(client.Id, cancellationToken);
+
+            if (application != null)
             {
-                ClientId = clientId,
-                ClientSecret = clientSecret,
-                ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
-                DisplayName = clientDisplayName,
-                RedirectUris = { new Uri(redirectUri) },
-                PostLogoutRedirectUris = { new Uri(postLogoutRedirectUri) },
-                Permissions =
-                {
-                    OpenIddictConstants.Permissions.Endpoints.Authorization,
-                    OpenIddictConstants.Permissions.Endpoints.Logout,
-                    OpenIddictConstants.Permissions.Endpoints.Token,
-                    OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
-                    OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
-                    OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
-                    OpenIddictConstants.Permissions.ResponseTypes.Code,
-                    OpenIddictConstants.Permissions.Scopes.Profile,
-                    OpenIddictConstants.Permissions.Scopes.Roles,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Name,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Email,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.PhoneNumber,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Locale,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.Zoneinfo,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictScopeDefaults.UpdatedAt,
-                    OpenIddictConstants.Permissions.Prefixes.Scope + OpenIddictConstants.Scopes.OfflineAccess
-                },
-                Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange }
-            }, cancellationToken);
+                await applicationManager.DeleteAsync(application, cancellationToken);
+            }
+
+            OpenIddictApplicationDescriptor descriptor = new() { ClientId = client.Id, ClientSecret = client.Secret, ConsentType = OpenIddictConstants.ConsentTypes.Explicit, DisplayName = client.DisplayName };
+
+            foreach (string scope in client.Scopes.Distinct().Where(scope => descriptor.Permissions.All(s => OpenIddictConstants.Permissions.Prefixes.Scope + scope != s)))
+            {
+                descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Scope + scope);
+            }
+
+            foreach (string endpoint in client.Endpoints.Distinct().Where(endpoint => descriptor.Permissions.All(e => OpenIddictConstants.Permissions.Prefixes.Endpoint + endpoint != e)))
+            {
+                descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.Endpoint + endpoint);
+            }
+
+            foreach (string grantType in client.GrantTypes.Distinct().Where(grantType => descriptor.Permissions.All(g => OpenIddictConstants.Permissions.Prefixes.GrantType + grantType != g)))
+            {
+                descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.GrantType + grantType);
+            }
+
+            foreach (string responseType in client.ResponseTypes.Distinct().Where(responseType => descriptor.Permissions.All(r => OpenIddictConstants.Permissions.Prefixes.ResponseType + responseType != r)))
+            {
+                descriptor.Permissions.Add(OpenIddictConstants.Permissions.Prefixes.ResponseType + responseType);
+            }
+
+            foreach (string requirement in client.Requirements.Distinct().Where(requirement => descriptor.Requirements.All(r => OpenIddictConstants.Requirements.Prefixes.Feature + requirement != r)))
+            {
+                descriptor.Requirements.Add(OpenIddictConstants.Requirements.Prefixes.Feature + requirement);
+            }
+
+            foreach (string uri in client.RedirectUris.Distinct().Where(endpoint => descriptor.RedirectUris.All(e => new Uri(endpoint) != e)))
+            {
+                descriptor.RedirectUris.Add(new Uri(uri));
+            }
+
+            foreach (string uri in client.PostLogoutRedirectUris.Distinct().Where(endpoint => descriptor.PostLogoutRedirectUris.All(e => new Uri(endpoint) != e)))
+            {
+                descriptor.PostLogoutRedirectUris.Add(new Uri(uri));
+            }
+
+            await applicationManager.CreateAsync(descriptor, cancellationToken);
         }
     }
 }

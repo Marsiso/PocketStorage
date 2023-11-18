@@ -2,7 +2,6 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
-using OpenIddict.Abstractions;
 using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.BackgroundServices;
@@ -13,9 +12,17 @@ using PocketStorage.Core.Pipelines;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.Domain.Application.Models;
-using PocketStorage.Domain.Constants;
+using PocketStorage.Domain.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+string? solutionLocation = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.FullName ?? throw new InvalidOperationException();
+IConfigurationRoot globalSettings = new ConfigurationBuilder()
+    .SetBasePath(solutionLocation)
+    .AddJsonFile("global.json")
+    .Build();
+
+ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
 
 IServiceCollection services = builder.Services;
 IConfiguration configuration = builder.Configuration;
@@ -26,6 +33,7 @@ services.AddControllersWithViews();
 
 services.AddOptions();
 services.AddSingleton(configuration);
+services.AddSingleton(applicationSettings);
 
 services.AddOptions<ArgonPasswordHasherOptions>()
     .Configure(options => { options.Pepper = "SecurePasswordPepper"; })
@@ -35,7 +43,7 @@ services.AddOptions<ArgonPasswordHasherOptions>()
 services.AddSingleton<IPasswordHasher<User>, ArgonPasswordHasher<User>>();
 
 services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
-services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), configuration));
+services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), applicationSettings));
 services.AddDatabaseDeveloperPageExceptionFilter();
 
 services.AddIdentity<User, Role>(options => options.Configure())
@@ -54,6 +62,8 @@ services.AddOpenIddict()
     })
     .AddServer(builder =>
     {
+        builder.SetIssuer(applicationSettings.OpenIdConnect.Server.Authority);
+
         // Enable the authorization, logout, token and user info endpoints.
         builder.SetAuthorizationEndpointUris("/connect/authorize");
         builder.SetLogoutEndpointUris("/connect/logout");
@@ -63,11 +73,10 @@ services.AddOpenIddict()
         builder.SetVerificationEndpointUris("/connect/verify");
 
         // Mark the "profile.name", "profile.email", ... as supported scopes.
-        builder.RegisterScopes(OpenIddictConstants.Scopes.Profile, OpenIddictConstants.Scopes.Roles, OpenIddictScopeDefaults.Name, OpenIddictScopeDefaults.Email, OpenIddictScopeDefaults.PhoneNumber, OpenIddictScopeDefaults.Locale, OpenIddictScopeDefaults.Zoneinfo, OpenIddictScopeDefaults.UpdatedAt);
+        builder.RegisterScopes(applicationSettings.OpenIdConnect.Server.SupportedScopes.ToArray());
 
         // Mark the "name", "given_name", ... as supported claims.
-        builder.RegisterClaims(OpenIddictConstants.Claims.Name, OpenIddictConstants.Claims.Username, OpenIddictConstants.Claims.GivenName, OpenIddictConstants.Claims.MiddleName, OpenIddictConstants.Claims.FamilyName, OpenIddictConstants.Claims.Email, OpenIddictConstants.Claims.EmailVerified,
-            OpenIddictConstants.Claims.PhoneNumber, OpenIddictConstants.Claims.PhoneNumberVerified, OpenIddictConstants.Claims.Role, OpenIddictConstants.Claims.Locale, OpenIddictConstants.Claims.Zoneinfo, OpenIddictConstants.Claims.UpdatedAt);
+        builder.RegisterClaims(applicationSettings.OpenIdConnect.Server.SupportedClaims.ToArray());
 
         // Enable the client credentials flow
         builder.AllowClientCredentialsFlow();

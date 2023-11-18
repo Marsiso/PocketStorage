@@ -3,9 +3,7 @@
 namespace PocketStorage.ResourceServer.Controllers.Base;
 
 [ApiController]
-public abstract class ApiControllerBase<TController> : ControllerBase where TController : class
+public abstract class ApiControllerBase<TController>(ILogger<TController> logger) : ControllerBase where TController : class
 {
-    protected readonly ILogger<TController> Logger;
-
-    public ApiControllerBase(ILogger<TController> logger) => Logger = logger;
+    protected readonly ILogger<TController> Logger = logger;
 }

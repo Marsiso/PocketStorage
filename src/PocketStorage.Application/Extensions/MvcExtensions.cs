@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 
-namespace PocketStorage.ResourceServer.Extensions;
+namespace PocketStorage.Application.Extensions;
 
 public static class MvcExtensions
 {
