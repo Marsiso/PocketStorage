@@ -1,13 +1,7 @@
 ﻿namespace PocketStorage.Domain.Exceptions;
 
-public class EntityNotFoundException : Exception
+public class EntityNotFoundException(string? entityIdentifier, string? entityName) : Exception
 {
-    public EntityNotFoundException(string? entityIdentifier, string? entityName)
-    {
-        EntityIdentifier = entityIdentifier;
-        EntityName = entityName;
-    }
-
-    public string? EntityIdentifier { get; }
-    public string? EntityName { get; }
+    public string? EntityIdentifier { get; } = entityIdentifier;
+    public string? EntityName { get; } = entityName;
 }

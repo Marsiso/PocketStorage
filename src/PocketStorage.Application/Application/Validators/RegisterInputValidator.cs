@@ -3,6 +3,9 @@ using MediatR;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
+using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Enums;
+using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Application.Application.Validators;
 
@@ -59,12 +62,7 @@ public class RegisterInputValidator : AbstractValidator<RegisterInput>
 
     private async Task<bool> UserDoesNotExist(string? email, CancellationToken cancellationToken)
     {
-        GetUserQueryResult result = await _mediator.Send(new GetUserQuery(), cancellationToken);
-        if (result.Status == GetUserQueryResultStatus.Fail)
-        {
-            return true;
-        }
-
-        return false;
+        ApiCallResponse<User> result = await _mediator.Send(new GetUserQuery(), cancellationToken);
+        return result is { Status: RequestStatus.EntityNotFound, Result: null };
     }
 }

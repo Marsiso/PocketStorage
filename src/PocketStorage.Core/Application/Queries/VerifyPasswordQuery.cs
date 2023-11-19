@@ -1,91 +1,40 @@
-﻿using System.Net;
-using MediatR;
+﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;
-using PocketStorage.Domain.Contracts;
+using PocketStorage.Domain.Enums;
 using PocketStorage.Domain.Exceptions;
 using PocketStorage.Domain.Models;
 using static System.String;
-using static PocketStorage.Core.Application.Queries.VerifyPasswordQueryResultStatus;
 
 namespace PocketStorage.Core.Application.Queries;
 
-public class VerifyPasswordQuery : IRequest<VerifyPasswordQueryResult>
+public class VerifyPasswordQuery(string? email, string? password) : IRequest<ApiCallResponse<bool>>
 {
-    public VerifyPasswordQuery(string? email, string? password)
-    {
-        Email = email;
-        Password = password;
-    }
-
-    public string? Email { get; set; }
-    public string? Password { get; set; }
+    public string? Email { get; set; } = email;
+    public string? Password { get; set; } = password;
 }
 
-public class VerifyPasswordQueryHandler : IRequestHandler<VerifyPasswordQuery, VerifyPasswordQueryResult>
+public class VerifyPasswordQueryHandler(DataContext context, UserManager<User> userManager) : IRequestHandler<VerifyPasswordQuery, ApiCallResponse<bool>>
 {
-    private readonly DataContext _context;
-    private readonly UserManager<User> _userManager;
-
-    public VerifyPasswordQueryHandler(DataContext context, UserManager<User> userManager)
-    {
-        _context = context;
-        _userManager = userManager;
-    }
-
-    public async Task<VerifyPasswordQueryResult> Handle(VerifyPasswordQuery request, CancellationToken cancellationToken)
+    public async Task<ApiCallResponse<bool>> Handle(VerifyPasswordQuery request, CancellationToken cancellationToken)
     {
         if (IsNullOrWhiteSpace(request.Email))
         {
-            return new VerifyPasswordQueryResult(new ApiCallError());
+            return new ApiCallResponse<bool>(RequestStatus.Fail, false, new ApiCallError(RequestStatus.Fail, "Invalid request, please provide the account's email address.", new BadRequestException()));
         }
 
         if (IsNullOrWhiteSpace(request.Password))
         {
-            return new VerifyPasswordQueryResult(new ApiCallError());
+            return new ApiCallResponse<bool>(RequestStatus.Fail, false, new ApiCallError(RequestStatus.Fail, "Invalid request, please provide the account's password.", new BadRequestException()));
         }
 
-        User? user = await GetUserQueryHandler.CompiledQuery(_context, request.Email);
+        User? user = await GetUserQueryHandler.CompiledQuery(context, request.Email);
         if (user == null)
         {
-            return new VerifyPasswordQueryResult(UserNotFound, new ApiCallError(HttpStatusCode.NotFound, new EntityNotFoundException(request.Email, nameof(User))));
+            return new ApiCallResponse<bool>(RequestStatus.EntityNotFound, false, new ApiCallError(RequestStatus.EntityNotFound, "The user with the given email address could not be found.", new EntityNotFoundException(request.Email, nameof(User))));
         }
 
-        return new VerifyPasswordQueryResult(Success, await _userManager.CheckPasswordAsync(user, request.Password));
+        return new ApiCallResponse<bool>(RequestStatus.Success, await userManager.CheckPasswordAsync(user, request.Password), null);
     }
-}
-
-public class VerifyPasswordQueryResult : IRequestResult
-{
-    public VerifyPasswordQueryResult(VerifyPasswordQueryResultStatus status, bool result)
-    {
-        Status = status;
-        Result = result;
-    }
-
-    public VerifyPasswordQueryResult(VerifyPasswordQueryResultStatus status, ApiCallError? error)
-    {
-        Status = status;
-        Error = error;
-    }
-
-    public VerifyPasswordQueryResult(ApiCallError? error)
-    {
-        Status = Fail;
-        Error = error;
-    }
-
-    public VerifyPasswordQueryResultStatus Status { get; set; }
-    public bool Result { get; set; }
-    public ApiCallError? Error { get; set; }
-}
-
-public enum VerifyPasswordQueryResultStatus
-{
-    Success,
-    UserNotFound,
-    Fail,
-    OperationCancelled,
-    InternalServerError
 }

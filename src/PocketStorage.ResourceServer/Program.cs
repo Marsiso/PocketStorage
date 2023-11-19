@@ -57,6 +57,8 @@ services.AddIdentityCore<User>()
     .AddRoles<Role>()
     .AddEntityFrameworkStores<DataContext>();
 
+services.AddHttpContextAccessor();
+
 services.AddAutoMapper(typeof(UserProfile));
 services.AddValidatorsFromAssembly(typeof(LoginInputValidator).Assembly);
 services.AddMediatR(options =>

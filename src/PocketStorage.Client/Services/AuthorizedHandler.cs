@@ -3,15 +3,11 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 namespace PocketStorage.Client.Services;
 
-public sealed class AuthorizedHandler : DelegatingHandler
+public sealed class AuthorizedHandler(HostAuthenticationStateProvider authenticationStateProvider) : DelegatingHandler
 {
-    private readonly HostAuthenticationStateProvider _authenticationStateProvider;
-
-    public AuthorizedHandler(HostAuthenticationStateProvider authenticationStateProvider) => _authenticationStateProvider = authenticationStateProvider;
-
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
-        AuthenticationState authState = await _authenticationStateProvider.GetAuthenticationStateAsync();
+        AuthenticationState authState = await authenticationStateProvider.GetAuthenticationStateAsync();
         HttpResponseMessage responseMessage;
         if (authState.User.Identity is { IsAuthenticated: false })
         {
@@ -26,7 +22,7 @@ public sealed class AuthorizedHandler : DelegatingHandler
         if (responseMessage.StatusCode == HttpStatusCode.Unauthorized)
         {
             // If server returned 401 Unauthorized, redirect to login page.
-            _authenticationStateProvider.SignIn();
+            authenticationStateProvider.SignIn();
         }
 
         return responseMessage;

@@ -1,15 +1,8 @@
 ﻿namespace PocketStorage.Domain.Exceptions;
 
-public class EntityValidationException : Exception
+public class EntityValidationException(string? name, string? identifier, string? message, Dictionary<string, string[]> errors) : Exception(message)
 {
-    public EntityValidationException(string? name, string? identifier, string? message, Dictionary<string, string[]> errors) : base(message)
-    {
-        Name = name;
-        Identifier = identifier;
-        Errors = errors;
-    }
-
-    public string? Name { get; }
-    public string? Identifier { get; }
-    public Dictionary<string, string[]> Errors { get; }
+    public string? Name { get; } = name;
+    public string? Identifier { get; } = identifier;
+    public Dictionary<string, string[]> Errors { get; } = errors;
 }

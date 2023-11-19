@@ -2,6 +2,9 @@
 using MediatR;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
+using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Enums;
+using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Application.Application.Validators;
 
@@ -24,12 +27,7 @@ public class ForgotPasswordInputValidator : AbstractValidator<ForgotPasswordInpu
 
     private async Task<bool> UserExists(string? email, CancellationToken cancellationToken)
     {
-        GetUserQueryResult result = await _mediator.Send(new GetUserQuery(), cancellationToken);
-        if (result.Status == GetUserQueryResultStatus.Success)
-        {
-            return true;
-        }
-
-        return false;
+        ApiCallResponse<User> userResult = await _mediator.Send(new GetUserQuery(), cancellationToken);
+        return userResult is { Status: RequestStatus.Success, Result: not null };
     }
 }

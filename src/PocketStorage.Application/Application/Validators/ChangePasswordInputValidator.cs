@@ -3,6 +3,9 @@ using MediatR;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
+using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Enums;
+using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Application.Application.Validators;
 
@@ -43,13 +46,13 @@ public class ChangePasswordInputValidator : AbstractValidator<ChangePasswordInpu
 
     private async Task<bool> HasValidPassword(string? password, CancellationToken cancellationToken)
     {
-        GetUserQueryResult userResult = await _mediator.Send(new GetUserQuery(), cancellationToken);
-        if (userResult.Status != GetUserQueryResultStatus.Success)
+        ApiCallResponse<User> userResult = await _mediator.Send(new GetUserQuery(), cancellationToken);
+        if (userResult.Status != RequestStatus.Success)
         {
             return false;
         }
 
-        VerifyPasswordQueryResult result = await _mediator.Send(new VerifyPasswordQuery(userResult.Result.Email, password), cancellationToken);
-        return result is { Status: VerifyPasswordQueryResultStatus.Success, Result: true };
+        ApiCallResponse<bool> verificationResult = await _mediator.Send(new VerifyPasswordQuery(userResult.Result.Email, password), cancellationToken);
+        return verificationResult is { Status: RequestStatus.Success, Result: true };
     }
 }

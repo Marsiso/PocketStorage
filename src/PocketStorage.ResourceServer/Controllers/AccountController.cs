@@ -13,11 +13,11 @@ public class AccountController : ApiControllerBase<AccountController>
     {
     }
 
-    [HttpGet("~/api/account/login")]
+    [HttpGet("~/api/account/signin")]
     public ActionResult Login(string returnUrl) => Challenge(new AuthenticationProperties { RedirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/" });
 
     [ValidateAntiForgeryToken]
     [Authorize]
-    [HttpPost("~/api/account/logout")]
+    [HttpPost("~/api/account/sign-out")]
     public IActionResult Logout() => SignOut(new AuthenticationProperties { RedirectUri = "/" }, CookieAuthenticationDefaults.AuthenticationScheme, OpenIdConnectDefaults.AuthenticationScheme);
 }

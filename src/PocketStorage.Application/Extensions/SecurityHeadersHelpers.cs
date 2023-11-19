@@ -26,10 +26,10 @@ public static class SecurityHeadersHelpers
                 builder.AddBaseUri().Self();
                 builder.AddFrameAncestors().None();
 
-                builder.AddScriptSrc()
-                    .Self()
-                    .WithHash256("v8v3RKRPmN4odZ1CWM5gw80QKPCCWMcpNeOmimNL2AA=")
-                    .UnsafeEval();
+                // builder.AddScriptSrc()
+                //     .Self()
+                //     .WithHash256("v8v3RKRPmN4odZ1CWM5gw80QKPCCWMcpNeOmimNL2AA=")
+                //     .UnsafeEval();
             })
             .RemoveServerHeader()
             .AddPermissionsPolicy(builder =>
