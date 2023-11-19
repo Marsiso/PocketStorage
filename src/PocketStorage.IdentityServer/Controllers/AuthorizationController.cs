@@ -212,7 +212,7 @@ public class AuthorizationController(
     public async Task<IActionResult> Authorize()
     {
         OpenIddictRequest request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
-        AuthenticateResult? result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
+        AuthenticateResult result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
         // Try to retrieve the user principal stored in the authentication cookie and redirect the
         // user agent to the login page (or to an external provider) in the following cases:
         //
@@ -220,8 +220,8 @@ public class AuthorizationController(
         // - If prompt=login was specified by the client application
         // - If a max_age parameter was provided and the authentication cookie is not considered
         // "fresh" enough.
-        if (result?.Succeeded == false || request.HasPrompt(Prompts.Login) ||
-            (request.MaxAge != null && result?.Properties?.IssuedUtc != null && DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
+        if (result.Succeeded == false || request.HasPrompt(Prompts.Login) ||
+            (request.MaxAge != null && result.Properties?.IssuedUtc != null && DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
         {
             // If the client application requested prompt less authentication, return an error
             // indicating that the user is not logged in.
@@ -245,10 +245,10 @@ public class AuthorizationController(
         }
 
         // Retrieve the profile of the logged in user.
-        User user = await userManager.GetUserAsync(result?.Principal!) ?? throw new InvalidOperationException("The user details cannot be retrieved.");
+        User user = await userManager.GetUserAsync(result.Principal) ?? throw new InvalidOperationException("The user details cannot be retrieved.");
 
         // Retrieve the application details from the database.
-        object application = await applicationManager.FindByClientIdAsync(request.ClientId ?? string.Empty) ?? throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
+        object application = await applicationManager.FindByClientIdAsync(request.ClientId) ?? throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
         // Retrieve the permanent authorizations associated with the user and the calling client application.
         List<object> authorizations = await authorizationManager.FindAsync(

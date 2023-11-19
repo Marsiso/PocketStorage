@@ -119,6 +119,13 @@ WebApplication application = builder.Build();
 
 if (environment.IsDevelopment())
 {
+    application.UseCors(options =>
+    {
+        options.AllowAnyHeader();
+        options.AllowAnyMethod();
+        options.AllowAnyOrigin();
+    });
+
     application.UseMigrationsEndPoint();
 }
 else

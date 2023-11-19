@@ -4,6 +4,12 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,11 +19,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Identity.Web" Version="2.15.3"/>
+    <PackageReference Include="NSwag.AspNetCore" Version="14.0.0-preview010"/>
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PocketStorage.Application\PocketStorage.Application.csproj"/>
     <ProjectReference Include="..\PocketStorage.Client\PocketStorage.Client.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Filters\"/>
   </ItemGroup>
 
 </Project>

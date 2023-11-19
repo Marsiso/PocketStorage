@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using NSwag;
 using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.Extensions;
@@ -67,12 +68,61 @@ services.AddMediatR(options =>
     options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehaviour<,>));
 });
 
+builder.Services.AddOpenApiDocument(options =>
+{
+    options.PostProcess = document =>
+    {
+        document.Info = new OpenApiInfo
+        {
+            Version = "v1",
+            Title = "Pocket Storage Resource Server",
+            Description = "An ASP.NET Core RESTful API that is part of the BFF pattern for the Blazor Web Assembly client application.",
+            TermsOfService = "https://localhost:5003/privacy",
+            Contact = new OpenApiContact { Name = "LinkedIn", Url = "https://www.linkedin.com/in/marek-ol%C5%A1%C3%A1k-1715b724a/" },
+            License = new OpenApiLicense { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
+        };
+    };
+
+    // TODO: To authenticate use the Blazor Web Assembly application.
+    // options.AddSecurity(Constants.Bearer, new OpenApiSecurityScheme
+    // {
+    //     Type = OpenApiSecuritySchemeType.OAuth2,
+    //     Flow = OpenApiOAuth2Flow.AccessCode,
+    //     TokenUrl = "https://localhost:5001/connect/token",
+    //     AuthorizationUrl = "https://localhost:5001/connect/authorize",
+    //     Scopes = new Dictionary<string, string>(applicationSettings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server_swagger").Scopes.ToDictionary(scope => scope, _ => "Scope description"))
+    //     {
+    //         [OpenIddictConstants.Scopes.OpenId] = "Scope description"
+    //     }
+    // });
+    //
+    // options.OperationProcessors.Add(new AspNetCoreOperationSecurityScopeProcessor(Constants.Bearer));
+});
+
 WebApplication application = builder.Build();
 
 if (application.Environment.IsDevelopment())
 {
     application.UseDeveloperExceptionPage();
     application.UseWebAssemblyDebugging();
+
+    application.UseOpenApi();
+    application.UseSwaggerUi(options =>
+    {
+        options.Path = "/swagger";
+        options.DocumentTitle = "Pocket Storage Resource Server";
+
+        // OpenIdConnectClientSettings client = applicationSettings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server_swagger");
+        // options.OAuth2Client = new OAuth2ClientSettings
+        // {
+        //     AppName = client.DisplayName,
+        //     ClientId = client.Id,
+        //     ClientSecret = client.Secret,
+        //     UsePkceWithAuthorizationCodeGrant = true
+        // };
+    });
+
+    application.UseReDoc(options => options.Path = "/redoc");
 }
 
 application.UseSecurityHeaders(SecurityHeadersHelpers.GetHeaderPolicyCollection(environment.IsDevelopment(), applicationSettings));

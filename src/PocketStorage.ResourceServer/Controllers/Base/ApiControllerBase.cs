@@ -16,7 +16,7 @@ public abstract class ApiControllerBase<TController>(ILogger<TController> logger
             RequestStatus.Success => Ok(response),
             RequestStatus.EntityCreated => StatusCode((int)response.Status, response),
             RequestStatus.EntityNotFound => NotFound(response),
-            RequestStatus.Fail or RequestStatus.ValidationFailure => BadRequest(response),
+            RequestStatus.Fail => BadRequest(response),
             RequestStatus.Cancelled => StatusCode((int)response.Status, response),
             RequestStatus.Error => RecordException(response, action)
         };

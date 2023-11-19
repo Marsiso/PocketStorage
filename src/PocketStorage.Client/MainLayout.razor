@@ -37,9 +37,9 @@
                     <AuthorizeView>
                         <Authorized>
                             <li class="nav-item">
-                                <form action="api/account/logout" method="post">
+                                <form action="api/account/sign-out" method="post">
                                     <AntiForgeryTokenInput/>
-                                    <button type="submit" class="nav-link" href="/Logout">
+                                    <button type="submit" class="nav-link">
                                         <span class="fa-solid fa-sign-out-alt text-start"></span>
                                         Sign out
                                     </button>
@@ -48,9 +48,9 @@
                         </Authorized>
                         <NotAuthorized>
                             <li class="nav-item">
-                                <form action="api/account/login" method="post">
+                                <form action="api/account/signin" method="post">
                                     <AntiForgeryTokenInput/>
-                                    <button type="submit" class="nav-link" href="/Login">
+                                    <button type="submit" class="nav-link">
                                         <span class="fa-solid fa-sign-in"></span>
                                         Sign in
                                     </button>

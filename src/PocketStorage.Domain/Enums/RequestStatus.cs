@@ -6,7 +6,6 @@ public enum RequestStatus
     EntityCreated = 201,
     EntityNotFound = 404,
     Fail = 400,
-    ValidationFailure = 400,
     Cancelled = 499,
     Error = 500
 }

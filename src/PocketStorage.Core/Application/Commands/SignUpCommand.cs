@@ -22,7 +22,7 @@ public class SignUpCommandHandler(UserManager<User> userManager, IValidator<Sign
             Dictionary<string, string[]> errors = (await validator.ValidateAsync(new ValidationContext<SignUpCommand>(request), cancellationToken)).DistinctErrorsByProperty();
             if (errors.Count > 0)
             {
-                return new ApiCallResponse<User>(RequestStatus.ValidationFailure, null, new ApiCallError(RequestStatus.ValidationFailure, "The submitted form contains invalid information.", new EntityValidationException(nameof(User), request.Email, null, errors)));
+                return new ApiCallResponse<User>(RequestStatus.Fail, null, new ApiCallError(RequestStatus.Fail, "The submitted form contains invalid information.", new EntityValidationException(nameof(User), request.Email, null, errors)));
             }
 
             User user = mapper.Map<User>(request);
