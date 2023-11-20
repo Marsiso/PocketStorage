@@ -1,21 +1,32 @@
 ﻿using CommunityToolkit.Diagnostics;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
+using Npgsql;
+using PocketStorage.Domain.Options;
 
 namespace PocketStorage.Application.Extensions;
 
 public static class DbContextOptionsBuilderExtensions
 {
-    public static void Configure(this DbContextOptionsBuilder builder, bool isDevelopment, IConfiguration configuration)
+    public static DbContextOptionsBuilder Configure(this DbContextOptionsBuilder builder, bool development, ApplicationSettings settings)
     {
-        string? connectionString = configuration.GetConnectionString("DefaultConnection");
+        string connectionString = new NpgsqlConnectionStringBuilder
+        {
+            Host = settings.Postgresql.Host,
+            Port = settings.Postgresql.Port,
+            Database = settings.Postgresql.Database,
+            Username = settings.Postgresql.Username,
+            Password = settings.Postgresql.Password,
+            Pooling = settings.Postgresql.Pooling
+        }.ConnectionString;
 
         Guard.IsNotNullOrWhiteSpace(connectionString);
 
         builder.UseNpgsql(connectionString);
         builder.UseOpenIddict();
         builder.UseQueryTrackingBehavior(QueryTrackingBehavior.TrackAll);
-        builder.EnableDetailedErrors(isDevelopment);
-        builder.EnableSensitiveDataLogging(isDevelopment);
+        builder.EnableDetailedErrors(development);
+        builder.EnableSensitiveDataLogging(development);
+
+        return builder;
     }
 }

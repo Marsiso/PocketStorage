@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FluentValidation;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Application.Models;
 
@@ -8,23 +10,25 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class ChangePasswordModel : PageModel
 {
-    private readonly ILogger<ChangePasswordModel> _logger;
     private readonly SignInManager<User> _signInManager;
     private readonly UserManager<User> _userManager;
+    private readonly IValidator<ChangePasswordInput> _validator;
 
     public ChangePasswordModel(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
-        ILogger<ChangePasswordModel> logger)
+        IValidator<ChangePasswordInput> validator)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _logger = logger;
+        _validator = validator;
     }
 
-    [BindProperty] public ChangePasswordInput Form { get; set; } = default!;
+    [BindProperty] public ChangePasswordInput Form { get; set; } = null!;
 
     [TempData] public string? StatusMessage { get; set; }
+
+    public Dictionary<string, string[]>? Errors { get; set; } = new();
 
     public async Task<IActionResult> OnGetAsync()
     {
@@ -45,13 +49,14 @@ public class ChangePasswordModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
+        Errors = (await _validator.ValidateAsync(new ValidationContext<ChangePasswordInput>(Form))).DistinctErrorsByProperty();
+        if (Errors.Count > 0)
         {
             return Page();
         }
 
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -68,8 +73,6 @@ public class ChangePasswordModel : PageModel
         }
 
         await _signInManager.RefreshSignInAsync(user);
-
-        _logger.LogInformation("User changed their password successfully.");
 
         StatusMessage = "Your password has been changed.";
 

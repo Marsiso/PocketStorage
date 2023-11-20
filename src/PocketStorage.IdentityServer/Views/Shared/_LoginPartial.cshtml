@@ -1,27 +1,38 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using PocketStorage.Domain.Application.Models
 @inject SignInManager<User> SignInManager
-@inject UserManager<User> UserManager
 
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
         <li class="nav-item">
-            <a id="manage" class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @UserManager.GetUserName(User)!</a>
+            <a id="manage" class="nav-link" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                <span class="fa-solid fa-user"></span>
+                Profile
+            </a>
         </li>
         <li class="nav-item">
-            <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = string.Empty })">
-                <button id="logout" type="submit" class="nav-link btn btn-link border-0">Logout</button>
+            <form id="logoutForm" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = string.Empty })">
+                <button id="logout" type="submit" class="nav-link">
+                    <span class="fa-solid fa-sign-out-alt text-start"></span>
+                    Sign out
+                </button>
             </form>
         </li>
     }
     else
     {
         <li class="nav-item">
-            <a class="nav-link" id="register" asp-area="Identity" asp-page="/Account/Register">Register</a>
+            <a class="nav-link me-1 me-sm-3" id="register" asp-area="Identity" asp-page="/Account/Register">
+                <span class="fa-solid fa-user-plus"></span>
+                Sign up
+            </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link" id="login" asp-area="Identity" asp-page="/Account/Login">Login</a>
+            <a class="nav-link" id="login" asp-area="Identity" asp-page="/Account/Login">
+                <span class="fa-solid fa-sign-in"></span>
+                Sign in
+            </a>
         </li>
     }
 </ul>

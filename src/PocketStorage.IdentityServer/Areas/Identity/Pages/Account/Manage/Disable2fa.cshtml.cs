@@ -7,16 +7,11 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class Disable2faModel : PageModel
 {
-    private readonly ILogger<Disable2faModel> _logger;
     private readonly UserManager<User> _userManager;
 
     public Disable2faModel(
-        UserManager<User> userManager,
-        ILogger<Disable2faModel> logger)
-    {
+        UserManager<User> userManager) =>
         _userManager = userManager;
-        _logger = logger;
-    }
 
     [TempData] public string? StatusMessage { get; set; }
 
@@ -39,7 +34,7 @@ public class Disable2faModel : PageModel
     public async Task<IActionResult> OnPostAsync()
     {
         User? user = await _userManager.GetUserAsync(User);
-        if (user is null)
+        if (user == null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -49,8 +44,6 @@ public class Disable2faModel : PageModel
         {
             throw new InvalidOperationException("Unexpected error occurred disabling 2FA.");
         }
-
-        _logger.LogInformation("User with ID '{UserId}' has disabled 2fa.", _userManager.GetUserId(User));
 
         StatusMessage = "2fa has been disabled. You can reenable 2fa when you setup an authenticator app";
 

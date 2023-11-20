@@ -4,26 +4,28 @@
     ViewData["Title"] = "Recovery code verification";
 }
 
-<h1>@ViewData["Title"]</h1>
-<hr/>
-<p>
-    You have requested to log in with a recovery code. This login will not be remembered until you provide
-    an authenticator app code at log in or disable 2FA and log in again.
-</p>
-<div class="row">
-    <div class="col-md-4">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
-            <div class="form-floating mb-3">
-                <input asp-for="Form.RecoveryCode" class="form-control" autocomplete="off" placeholder="RecoveryCode" required/>
-                <label asp-for="Form.RecoveryCode" class="form-label"></label>
-                <span asp-validation-for="Form.RecoveryCode" class="text-danger"></span>
+<div class="text-center mb-3">
+    <h1 class="display-6">Recovery code verification</h1>
+</div>
+<div class="row justify-content-center">
+    <div class="col-12" style="max-width: 30rem;">
+        <p>
+            You have requested to sign in with a recovery code. This login will not be remembered until you provide an authenticator code at log in or disable 2FA and sign in again.
+        </p>
+    </div>
+    <div class="col-12" style="max-width: 20rem;">
+        <form method="post" class="needs-validation" novalidate>
+            <div class="mb-3">
+                <label asp-for="Form.RecoveryCode" class="form-label">Verification code</label>
+                <input asp-for="Form.RecoveryCode" class="@(Model.Errors.ContainsKey(nameof(Model.Form.RecoveryCode)) ? "form-control is-invalid" : "form-control")" autocomplete="off" placeholder="Please enter your code" required/>
+                @if (Model.Errors.TryGetValue(nameof(Model.Form.RecoveryCode), out var recoveryCodeErrors))
+                {
+                    <div class="invalid-feedback">
+                        @recoveryCodeErrors.First()
+                    </div>
+                }
             </div>
-            <button type="submit" class="w-100 btn btn-primary">Log in</button>
+            <button type="submit" class="w-100 btn btn-secondary">Sign in</button>
         </form>
     </div>
 </div>
-
-@section Scripts {
-    <partial name="_ValidationScriptsPartial"/>
-}

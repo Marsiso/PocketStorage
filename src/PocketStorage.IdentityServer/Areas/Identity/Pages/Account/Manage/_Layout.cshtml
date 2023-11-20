@@ -9,18 +9,43 @@
     }
 }
 
-<h1>Manage your account</h1>
-
-<div>
-    <h2>Change your account settings</h2>
-    <hr/>
-    <div class="row">
-        <div class="col-md-3">
-            <partial name="_ManageNav"/>
-        </div>
-        <div class="col-md-9">
-            @RenderBody()
-        </div>
+<div class="row justify-content-center">
+    <div class="col-12 mb-3">
+        <ul class="nav justify-content-center">
+            <li class="nav-item text-black">
+                <a class="nav-link text-black" id="profile" asp-page="./Index">
+                    <span class="fa-solid fa-user"></span>
+                    Profile
+                </a>
+            </li>
+            <li class="nav-item text-black">
+                <a class="nav-link text-black" id="email" asp-page="./Email">
+                    <span class="fa-solid fa-envelope"></span>
+                    Email
+                </a>
+            </li>
+            <li class="nav-item text-black">
+                <a class="nav-link text-black" id="change-password" asp-page="./ChangePassword">
+                    <span class="fa-solid fa-key"></span>
+                    Password
+                </a>
+            </li>
+            <li class="nav-item text-black">
+                <a class="nav-link text-black" id="two-factor" asp-page="./TwoFactorAuthentication">
+                    <span class="fa-solid fa-lock"></span>
+                    Two-factor authentication
+                </a>
+            </li>
+            <li class="nav-item text-black">
+                <a class="nav-link text-black" id="personal-data" asp-page="./PersonalData">
+                    <span class="fa-solid fa-user-secret"></span>
+                    Personal data
+                </a>
+            </li>
+        </ul>
+    </div>
+    <div class="col-12">
+        @RenderBody()
     </div>
 </div>
 

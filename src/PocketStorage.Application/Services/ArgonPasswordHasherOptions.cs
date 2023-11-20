@@ -1,11 +1,9 @@
-﻿using PocketStorage.Application.Externals;
+﻿using PocketStorage.Application.External;
 
 namespace PocketStorage.Application.Services;
 
 public class ArgonPasswordHasherOptions
 {
-    public const string SectionName = "PasswordProtector";
-
     public required string? Pepper { get; set; }
 
     /// <summary>

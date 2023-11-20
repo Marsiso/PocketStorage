@@ -1,22 +1,72 @@
 ﻿@using Microsoft.Extensions.Primitives
+@using PocketStorage.Application.Extensions
 @model AuthorizeViewModel
 @{
-    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Authorization";
 }
 
-<div class="jumbotron">
-    <h1>Authorization</h1>
-
-    <p class="lead text-left">Do you want to grant <strong>@Model.ApplicationName</strong> access to your data (scopes requested: @Model.Scope)</p>
-
-    <form asp-controller="Authorization" asp-action="Authorize" method="post">
-        @* Flow the request parameters so they can be received by the Accept/Reject actions: *@
-        @foreach (var parameter in Context.Request.HasFormContentType ? (IEnumerable<KeyValuePair<string, StringValues>>)Context.Request.Form : Context.Request.Query)
+<div class="text-center mb-3">
+    <h1 class="display-6">Authorization</h1>
+</div>
+<div class="row justify-content-center">
+    <div class="col-12 text-center" style="max-width: 30rem;">
+        <p class="lead">Do you want to grant application access to your data?</p>
+    </div>
+    <div class="col-12 d-flex justify-content-center">
+        <div style="max-width: 30rem;">
+            <div class="alert alert-warning d-flex align-items-center justify-content-center" role="alert">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 me-2" viewBox="0 0 16 16" role="img" aria-label="Warning:">
+                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <div class="ms-3">
+                    The standard chunk of Lorem Ipsum used since the 1500s is reproduced below for those interested. Sections 1.10.32 and 1.10.33 from "de Finibus Bonorum et Malorum" by Cicero are also reproduced in their exact original form, accompanied by English versions from the 1914 translation by H. Rackham.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 text-center">
+        <p class="lead">
+            <strong>Application</strong>
+        </p>
+        <p class="lead">Name</p>
+        <p>
+            <code>@Model.ApplicationName</code>
+        </p>
+        <p class="lead">Host</p>
+        <p>
+            <code>@Model.Host</code>
+        </p>
+    </div>
+    <div class="col-12 text-center">
+        <p class="lead">
+            <strong>Scopes</strong>
+        </p>
+        @foreach (var scope in OpenIddictScopeHelpers.GetIncludedClaimNamesFrom(Model.Scopes, " "))
         {
-            <input type="hidden" name="@parameter.Key" value="@parameter.Value"/>
+            <p class="lead">@scope.Key</p>
+            @if (scope.Value.Length > 0)
+            {
+                <p>
+                    @foreach (var claim in scope.Value)
+                    {
+                        <code>@claim&nbsp;</code>
+                    }
+                </p>
+            }
         }
+    </div>
+    <div class="col-12">
+        <div class="row justify-content-center">
+            <form asp-controller="Authorization" asp-action="Authorize" method="post" style="max-width: 20rem;">
+                @* Flow the request parameters so they can be received by the Accept/Reject actions: *@
+                @foreach (var parameter in Context.Request.HasFormContentType ? (IEnumerable<KeyValuePair<string, StringValues>>)Context.Request.Form : Context.Request.Query)
+                {
+                    <input type="hidden" name="@parameter.Key" value="@parameter.Value"/>
+                }
 
-        <input class="btn btn-success" name="submit.Accept" type="submit" value="Yes" style="width: 7rem;"/>
-        <input class="btn btn-danger" name="submit.Deny" type="submit" value="No" style="width: 7rem;"/>
-    </form>
+                <input class="w-100 btn btn-secondary mt-3 mb-3" name="submit.Accept" type="submit" value="Yes"/>
+                <input class="w-100 btn btn-light" name="submit.Deny" type="submit" value="No"/>
+            </form>
+        </div>
+    </div>
 </div>

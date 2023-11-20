@@ -8,26 +8,19 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account;
 
 public class LogoutModel : PageModel
 {
-    private readonly ILogger<LogoutModel> _logger;
     private readonly SignInManager<User> _signInManager;
 
-    public LogoutModel(SignInManager<User> signInManager, ILogger<LogoutModel> logger)
-    {
-        _signInManager = signInManager;
-        _logger = logger;
-    }
+    public LogoutModel(SignInManager<User> signInManager) => _signInManager = signInManager;
 
-    public async Task<IActionResult> OnPost(string? returnUrl = default)
+    public async Task<IActionResult> OnPost(string? returnUrl = null)
     {
         await _signInManager.SignOutAsync();
 
-        _logger.LogInformation("User logged out.");
-
-        if (!IsNullOrWhiteSpace(returnUrl))
+        if (IsNullOrWhiteSpace(returnUrl))
         {
-            return LocalRedirect(returnUrl);
+            return RedirectToPage();
         }
 
-        return RedirectToPage();
+        return LocalRedirect(returnUrl);
     }
 }

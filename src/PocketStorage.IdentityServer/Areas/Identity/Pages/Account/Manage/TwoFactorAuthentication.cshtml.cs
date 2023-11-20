@@ -7,16 +7,13 @@ namespace PocketStorage.IdentityServer.Areas.Identity.Pages.Account.Manage;
 
 public class TwoFactorAuthenticationModel : PageModel
 {
-    private readonly ILogger<TwoFactorAuthenticationModel> _logger;
     private readonly SignInManager<User> _signInManager;
     private readonly UserManager<User> _userManager;
 
-    public TwoFactorAuthenticationModel(
-        UserManager<User> userManager, SignInManager<User> signInManager, ILogger<TwoFactorAuthenticationModel> logger)
+    public TwoFactorAuthenticationModel(UserManager<User> userManager, SignInManager<User> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _logger = logger;
     }
 
     public bool HasAuthenticator { get; set; }

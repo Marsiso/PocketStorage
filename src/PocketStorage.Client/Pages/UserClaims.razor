@@ -1,47 +1,44 @@
 ﻿@page "/userclaims"
 @using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using PocketStorage.Domain.Constants
+@attribute [Authorize(Roles = RoleDefaults.Administrator)]
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
-<PageTitle>User Claims</PageTitle>
+<PageTitle>Claims principal</PageTitle>
 
-<h1>Claims principal Data</h1>
-
-<button @onclick="GetClaimsPrincipalData">Get ClaimsPrincipal Data</button>
-
-<p>@message</p>
-
-@if (claims.Any())
-{
-    <ul>
-        @foreach (var claim in claims)
+<div class="text-center">
+    <h1 class="display-6">Claims principal</h1>
+</div>
+<div class="row">
+    <div class="col-12 text-center">
+        @if (Claims.Any())
         {
-            <li>@claim.Type: @claim.Value</li>
+            <p class="lead">
+                <strong>Claims</strong>
+            </p>
+            @foreach (var claim in Claims)
+            {
+                <p class="lead">@claim.Type</p>
+                <p>
+                    <code>@claim.Value</code>
+                </p>
+            }
         }
-    </ul>
-}
-
-<p>@surname</p>
+    </div>
+</div>
 
 @code {
-    private string? message;
-    private string? surname;
+    public IEnumerable<Claim> Claims { get; set; } = Enumerable.Empty<Claim>();
 
-    private IEnumerable<Claim> claims = Enumerable.Empty<Claim>();
-
-    private async Task GetClaimsPrincipalData()
+    protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = authState.User;
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = state.User;
 
-        if (user.Identity is not null && user.Identity.IsAuthenticated)
+        if (principal.Identity is {IsAuthenticated: true })
         {
-            message = $"{user.Identity.Name} is authenticated.";
-            claims = user.Claims;
-            surname = user.FindFirst(c => c.Type == ClaimTypes.Surname)?.Value;
-        }
-        else
-        {
-            message = "The user is NOT authenticated.";
+            Claims = principal.Claims;
         }
     }
 

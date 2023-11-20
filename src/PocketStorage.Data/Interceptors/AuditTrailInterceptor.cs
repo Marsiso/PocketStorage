@@ -74,9 +74,6 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
                     entityEntry.Entity.DateUpdated = date;
                     continue;
 
-                case EntityState.Deleted:
-                    throw new InvalidOperationException();
-
                 default:
                     continue;
             }
