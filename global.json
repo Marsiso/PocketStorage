@@ -83,8 +83,8 @@
                     "GrantTypes": ["authorization_code", "refresh_token", "client_credentials"],
                     "ResponseTypes": ["code"],
                     "Requirements": ["pkce"],
-                    "RedirectUris": ["https://localhost:5003/swagger/oauth2-redirect.html"],
-                    "PostLogoutRedirectUris": ["https://localhost:5003/swagger"]
+                    "RedirectUris": ["https://localhost:5003/swagger/oauth2-redirect.html", "http://localhost:5002/swagger/oauth2-redirect.html"],
+                    "PostLogoutRedirectUris": ["https://localhost:5003/swagger/index.html", "http://localhost:5002/swagger/index.html"]
                 }
             ]
         }
