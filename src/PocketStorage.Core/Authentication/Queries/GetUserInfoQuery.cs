@@ -8,7 +8,7 @@ using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Enums;
 using PocketStorage.Domain.Models;
 
-namespace PocketStorage.Core.Users.Queries;
+namespace PocketStorage.Core.Authentication.Queries;
 
 public class GetUserInfoQuery : IRequest<ApiCallResponse<UserInfo>>
 {

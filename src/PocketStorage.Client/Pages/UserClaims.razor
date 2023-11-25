@@ -1,8 +1,8 @@
 ﻿@page "/userclaims"
 @using System.Security.Claims
-@using Microsoft.AspNetCore.Authorization
-@using PocketStorage.Domain.Constants
-@attribute [Authorize(Roles = RoleDefaults.Administrator)]
+@using PocketStorage.BFF.Authorization.Filters
+@using PocketStorage.BFF.Authorization.Enums
+@attribute [Permit(Permissions = Permission.ViewUsers)]
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Claims principal</PageTitle>

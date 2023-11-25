@@ -1,6 +1,5 @@
-﻿using System.Collections.Immutable;
-using System.Globalization;
-using System.Security.Claims;
+﻿using System.Security.Claims;
+using MediatR;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +9,9 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Filters;
+using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Core.Extensions;
 using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Constants;
@@ -24,6 +25,7 @@ public class AuthorizationController(
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,
         IOpenIddictScopeManager scopeManager,
+        ISender sender,
         SignInManager<User> signInManager,
         UserManager<User> userManager)
     : WebControllerBase<AuthorizationController>
@@ -115,6 +117,16 @@ public class AuthorizationController(
 
                 yield break;
 
+            case PermitConstants.Claims.Permissions:
+                yield return Destinations.AccessToken;
+
+                if (claim.Subject.HasScope(PermitConstants.Scopes.Permissions))
+                {
+                    yield return Destinations.IdentityToken;
+                }
+
+                yield break;
+
             // Never include the security stamp in the access and identity tokens, as it is a
             // secret value.
             case "AspNet.Identity.SecurityStamp":
@@ -130,7 +142,7 @@ public class AuthorizationController(
     [FormValueRequired("submit.Accept")]
     [HttpPost("~/connect/authorize")]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Accept()
+    public async Task<IActionResult> Accept(CancellationToken cancellationToken)
     {
         OpenIddictRequest request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
@@ -138,20 +150,20 @@ public class AuthorizationController(
         User user = await userManager.GetUserAsync(User) ?? throw new InvalidOperationException("The user details cannot be retrieved.");
 
         // Retrieve the application details from the database.
-        object application = await applicationManager.FindByClientIdAsync(request.ClientId ?? "") ?? throw new InvalidOperationException("Details concerning the calling client application.");
+        object application = await applicationManager.FindByClientIdAsync(request.ClientId ?? "", cancellationToken) ?? throw new InvalidOperationException("Details concerning the calling client application.");
 
         // Retrieve the permanent authorizations associated with the user and the calling client application.
         List<object> authorizations = await authorizationManager.FindAsync(
             await userManager.GetUserIdAsync(user),
-            await applicationManager.GetIdAsync(application) ?? "",
+            await applicationManager.GetIdAsync(application, cancellationToken) ?? "",
             Statuses.Valid,
             AuthorizationTypes.Permanent,
-            request.GetScopes()).ToListAsync();
+            request.GetScopes(), cancellationToken).ToListAsync();
 
         // Note: the same check is already made in the other action but is repeated hero to ensure a
         // malicious user cant abuse this POST-only endpoint and force it to return a valid response
         // without the external authorization.
-        if (!authorizations.Any() && await applicationManager.HasConsentTypeAsync(application, ConsentTypes.External))
+        if (!authorizations.Any() && await applicationManager.HasConsentTypeAsync(application, ConsentTypes.External, cancellationToken))
         {
             return Forbid(
                 authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
@@ -167,27 +179,14 @@ public class AuthorizationController(
             Claims.Name,
             Claims.Role);
 
-        // Add the claims that will be persisted in the tokens
-        identity.SetClaim(Claims.Subject, await userManager.GetUserIdAsync(user));
-        identity.SetClaim(Claims.Email, await userManager.GetEmailAsync(user));
-        identity.SetClaim(Claims.EmailVerified, await userManager.IsEmailConfirmedAsync(user));
-        identity.SetClaim(Claims.PhoneNumber, await userManager.GetPhoneNumberAsync(user));
-        identity.SetClaim(Claims.PhoneNumberVerified, await userManager.IsPhoneNumberConfirmedAsync(user));
-        identity.SetClaim(Claims.Name, await userManager.GetUserNameAsync(user));
-        identity.SetClaim(Claims.Username, await userManager.GetUserNameAsync(user));
-        identity.SetClaim(Claims.GivenName, user.GivenName);
-        identity.SetClaim(Claims.MiddleName, string.Empty);
-        identity.SetClaim(Claims.FamilyName, user.FamilyName);
-        identity.SetClaim(Claims.Locale, user.Culture);
-        identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
-        identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
-        identity.SetClaims(Claims.Role, (await userManager.GetRolesAsync(user)).ToImmutableArray());
+        // Add the claims that will be persisted in the tokens.
+        identity = await identity.SetClaims(user.Email, sender, cancellationToken);
 
         // Note: in this sample, the granted scopes match the requested scope but you may want to
         // allow the user to uncheck specific scopes, for that, simply restrict the list of scopes
         // before calling SetScopes.
         identity.SetScopes(request.GetScopes());
-        identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
+        identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes(), cancellationToken).ToListAsync());
 
         // Automatically create a permanent authorization to avoid requiring explicit consent for
         // future authorization or token requests containing the same scopes.
@@ -195,11 +194,11 @@ public class AuthorizationController(
         authorization ??= await authorizationManager.CreateAsync(
             identity,
             await userManager.GetUserIdAsync(user),
-            await applicationManager.GetIdAsync(application) ?? string.Empty,
+            await applicationManager.GetIdAsync(application, cancellationToken) ?? string.Empty,
             AuthorizationTypes.Permanent,
-            identity.GetScopes());
+            identity.GetScopes(), cancellationToken);
 
-        identity.SetAuthorizationId(await authorizationManager.GetIdAsync(authorization));
+        identity.SetAuthorizationId(await authorizationManager.GetIdAsync(authorization, cancellationToken));
         identity.SetDestinations(GetDestinations);
 
         // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
@@ -209,7 +208,7 @@ public class AuthorizationController(
     [HttpGet("~/connect/authorize")]
     [HttpPost("~/connect/authorize")]
     [IgnoreAntiforgeryToken]
-    public async Task<IActionResult> Authorize()
+    public async Task<IActionResult> Authorize(CancellationToken cancellationToken)
     {
         OpenIddictRequest request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
         AuthenticateResult result = await HttpContext.AuthenticateAsync(IdentityConstants.ApplicationScheme);
@@ -248,16 +247,16 @@ public class AuthorizationController(
         User user = await userManager.GetUserAsync(result.Principal) ?? throw new InvalidOperationException("The user details cannot be retrieved.");
 
         // Retrieve the application details from the database.
-        object application = await applicationManager.FindByClientIdAsync(request.ClientId) ?? throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
+        object application = await applicationManager.FindByClientIdAsync(request.ClientId, cancellationToken) ?? throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
         // Retrieve the permanent authorizations associated with the user and the calling client application.
         List<object> authorizations = await authorizationManager.FindAsync(
             await userManager.GetUserIdAsync(user),
-            await applicationManager.GetClientIdAsync(application) ?? string.Empty,
+            await applicationManager.GetClientIdAsync(application, cancellationToken) ?? string.Empty,
             Statuses.Valid, AuthorizationTypes.Permanent,
-            request.GetScopes()).ToListAsync();
+            request.GetScopes(), cancellationToken).ToListAsync();
 
-        switch (await applicationManager.GetConsentTypeAsync(application))
+        switch (await applicationManager.GetConsentTypeAsync(application, cancellationToken))
         {
             // If the consent is external (e. g when authorizations are granted by a system
             // administrator), immediately return an error if no authorization can be found in the database.
@@ -281,26 +280,13 @@ public class AuthorizationController(
                     Claims.Role);
 
                 // Add the claims that will be persisted in the tokens.
-                identity.SetClaim(Claims.Subject, await userManager.GetUserIdAsync(user));
-                identity.SetClaim(Claims.Email, await userManager.GetEmailAsync(user));
-                identity.SetClaim(Claims.EmailVerified, await userManager.IsEmailConfirmedAsync(user));
-                identity.SetClaim(Claims.PhoneNumber, await userManager.GetPhoneNumberAsync(user));
-                identity.SetClaim(Claims.PhoneNumberVerified, await userManager.IsPhoneNumberConfirmedAsync(user));
-                identity.SetClaim(Claims.Name, await userManager.GetUserNameAsync(user));
-                identity.SetClaim(Claims.Username, await userManager.GetUserNameAsync(user));
-                identity.SetClaim(Claims.GivenName, user.GivenName);
-                identity.SetClaim(Claims.MiddleName, string.Empty);
-                identity.SetClaim(Claims.FamilyName, user.FamilyName);
-                identity.SetClaim(Claims.Locale, user.Culture);
-                identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
-                identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
-                identity.SetClaims(Claims.Role, (await userManager.GetRolesAsync(user)).ToImmutableArray());
+                identity = await identity.SetClaims(user.Email, sender, cancellationToken);
 
                 // Note: in this sample, the granted scopes match the requested scope but you may
                 // want to allow the user to uncheck specific scopes for that, simply restrict the
                 // list of scopes before calling SetScopes.
                 identity.SetScopes(request.GetScopes());
-                identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
+                identity.SetResources(await scopeManager.ListResourcesAsync(identity.GetScopes(), cancellationToken).ToListAsync());
 
                 // Automatically create a permanent authorization to avoid requiring explicit
                 // consent for future authorization or token requests containing the same scopes.
@@ -310,9 +296,9 @@ public class AuthorizationController(
                     await userManager.GetUserIdAsync(user),
                     await applicationManager.GetIdAsync(application) ?? "",
                     AuthorizationTypes.Permanent,
-                    identity.GetScopes());
+                    identity.GetScopes(), cancellationToken);
 
-                identity.SetAuthorizationId(await authorizationManager.GetIdAsync(authorization));
+                identity.SetAuthorizationId(await authorizationManager.GetIdAsync(authorization, cancellationToken));
                 identity.SetDestinations(GetDestinations);
 
                 return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
@@ -327,7 +313,7 @@ public class AuthorizationController(
 
             // In every other case, render the consent form
             default:
-                return View(new AuthorizeViewModel { ApplicationName = await applicationManager.GetLocalizedDisplayNameAsync(application), Host = HttpContext.Request.Host.Value, Scopes = request.Scope });
+                return View(new AuthorizeViewModel { ApplicationName = await applicationManager.GetLocalizedDisplayNameAsync(application, cancellationToken), Host = HttpContext.Request.Host.Value, Scopes = request.Scope });
         }
     }
 
@@ -340,7 +326,7 @@ public class AuthorizationController(
     [HttpPost("~/connect/token")]
     [IgnoreAntiforgeryToken]
     [Produces("application/json")]
-    public async Task<IActionResult> Exchange()
+    public async Task<IActionResult> Exchange(CancellationToken cancellationToken)
     {
         OpenIddictRequest request = HttpContext.GetOpenIddictServerRequest() ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
@@ -373,21 +359,7 @@ public class AuthorizationController(
 
             // Override the user claims present in the principal in case they changed since the
             // authorization code/refresh token was issued.
-            identity.SetClaim(Claims.Subject, await userManager.GetUserIdAsync(user));
-            identity.SetClaim(Claims.Email, await userManager.GetEmailAsync(user));
-            identity.SetClaim(Claims.EmailVerified, await userManager.IsEmailConfirmedAsync(user));
-            identity.SetClaim(Claims.PhoneNumber, await userManager.GetPhoneNumberAsync(user));
-            identity.SetClaim(Claims.PhoneNumberVerified, await userManager.IsPhoneNumberConfirmedAsync(user));
-            identity.SetClaim(Claims.Name, await userManager.GetUserNameAsync(user));
-            identity.SetClaim(Claims.Username, await userManager.GetUserNameAsync(user));
-            identity.SetClaim(Claims.GivenName, user.GivenName);
-            identity.SetClaim(Claims.MiddleName, string.Empty);
-            identity.SetClaim(Claims.FamilyName, user.FamilyName);
-            identity.SetClaim(Claims.Locale, user.Culture);
-            identity.SetClaim(Claims.Zoneinfo, TimeZoneInfo.Local.DisplayName);
-            identity.SetClaim(Claims.UpdatedAt, user.DateUpdated.ToString(new CultureInfo(user.Culture)));
-            identity.SetClaims(Claims.Role, (await userManager.GetRolesAsync(user)).ToImmutableArray());
-
+            identity = await identity.SetClaims(user.Email, sender, cancellationToken);
             identity.SetDestinations(GetDestinations);
 
             // Returning a SignInResult will ask openIddict to issue the appropriate access/identity tokens.

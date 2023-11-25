@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using PocketStorage.BFF.Authorization.Enums;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;

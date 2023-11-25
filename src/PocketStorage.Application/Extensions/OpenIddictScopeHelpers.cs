@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Diagnostics;
+using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Domain.Constants;
 using static OpenIddict.Abstractions.OpenIddictConstants.Claims;
 
@@ -31,6 +32,7 @@ public static class OpenIddictScopeHelpers
             OpenIddictScopeDefaults.Locale => new[] { Locale },
             OpenIddictScopeDefaults.Zoneinfo => new[] { Zoneinfo },
             OpenIddictScopeDefaults.UpdatedAt => new[] { UpdatedAt },
+            PermitConstants.Scopes.Permissions => new[] { PermitConstants.Claims.Permissions },
             _ => Array.Empty<string>()
         };
     }

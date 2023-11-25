@@ -2,8 +2,8 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
+using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Constants;
 using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Client.Services;
@@ -65,7 +65,7 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
     {
         string? returnUrl = customReturnUrl != null ? navigation.ToAbsoluteUri(customReturnUrl).ToString() : default;
         string encodedReturnUrl = Uri.EscapeDataString(returnUrl ?? navigation.Uri);
-        Uri signinUrl = navigation.ToAbsoluteUri($"{AuthorizationDefaults.LogInPath}?returnUrl={encodedReturnUrl}");
+        Uri signinUrl = navigation.ToAbsoluteUri($"{AuthorizationConstants.LogInPath}?returnUrl={encodedReturnUrl}");
         navigation.NavigateTo(signinUrl.ToString(), true);
     }
 }
