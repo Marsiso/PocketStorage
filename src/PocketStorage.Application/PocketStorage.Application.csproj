@@ -11,6 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Aspire.Npgsql" Version="8.0.0-preview.1.23557.2"/>
+    <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.0-preview.1.23557.2"/>
     <PackageReference Include="Aspire.StackExchange.Redis.OutputCaching" Version="8.0.0-preview.1.23557.2"/>
     <PackageReference Include="libsodium" Version="1.0.19"/>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Cookies" Version="2.2.0"/>

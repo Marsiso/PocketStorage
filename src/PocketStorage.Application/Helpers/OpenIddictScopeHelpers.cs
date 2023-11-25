@@ -3,7 +3,7 @@ using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Domain.Constants;
 using static OpenIddict.Abstractions.OpenIddictConstants.Claims;
 
-namespace PocketStorage.Application.Extensions;
+namespace PocketStorage.Application.Helpers;
 
 public static class OpenIddictScopeHelpers
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using PocketStorage.Domain.Options;
 
-namespace PocketStorage.Application.Extensions;
+namespace PocketStorage.Application.Helpers;
 
 public static class SecurityHeadersHelpers
 {

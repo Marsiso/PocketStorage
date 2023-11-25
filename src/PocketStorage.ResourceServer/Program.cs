@@ -11,6 +11,7 @@ using PocketStorage.AppHost.ServiceDefaults;
 using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.Extensions;
+using PocketStorage.Application.Helpers;
 using PocketStorage.Application.Services;
 using PocketStorage.BFF.Authorization.Extensions;
 using PocketStorage.Core.Application.Queries;
@@ -87,7 +88,7 @@ builder.Services.AddOpenApiDocument(options =>
             Version = "v1",
             Title = "Pocket Storage Resource Server",
             Description = "An ASP.NET Core RESTful API that is part of the BFF pattern for the Blazor Web Assembly client application.",
-            TermsOfService = "https://localhost:5003/privacy",
+            TermsOfService = "http://localhost:5002/privacy",
             Contact = new OpenApiContact { Name = "LinkedIn", Url = "https://www.linkedin.com/in/marek-ol%C5%A1%C3%A1k-1715b724a/" },
             License = new OpenApiLicense { Name = "MIT", Url = "https://en.wikipedia.org/wiki/MIT_License" }
         };
