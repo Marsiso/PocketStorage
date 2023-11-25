@@ -1,28 +1,18 @@
 ﻿using Microsoft.JSInterop;
-using PocketStorage.Client.Services.Abstractions;
-using PocketStorage.Domain.Constants;
+using PocketStorage.BFF.Authorization.Constants;
+using PocketStorage.Client.Services.Contracts;
 
-namespace PocketStorage.Client.Services;
+namespace PocketStorage.BFF.Authorization.Services;
 
-public sealed class AntiforgeryHttpClientFactory : IAntiforgeryHttpClientFactory
+public sealed class AntiforgeryHttpClientFactory(IHttpClientFactory httpClientFactory, IJSRuntime jSRuntime) : IAntiforgeryHttpClientFactory
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly IJSRuntime _jSRuntime;
-
-    public AntiforgeryHttpClientFactory(IHttpClientFactory httpClientFactory, IJSRuntime jSRuntime)
+    public async Task<HttpClient> CreateClientAsync(string clientName = AuthorizationConstants.AuthorizedClientName)
     {
-        _httpClientFactory = httpClientFactory;
-        _jSRuntime = jSRuntime;
-    }
+        string? token = await jSRuntime.InvokeAsync<string>("getAntiForgeryToken");
 
-    public async Task<HttpClient> CreateClientAsync(string clientName = AuthorizationDefaults.AuthorizedClientName)
-    {
-        string? token = await _jSRuntime.InvokeAsync<string>("getAntiForgeryToken");
+        HttpClient client = httpClientFactory.CreateClient(clientName);
 
-        HttpClient client = _httpClientFactory.CreateClient(clientName);
-
-        client.DefaultRequestHeaders.Add(AntiforgeryDefaults.HeaderName, token);
-
+        client.DefaultRequestHeaders.Add(AntiforgeryConstants.HeaderName, token);
         return client;
     }
 }

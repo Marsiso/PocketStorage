@@ -2,7 +2,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PocketStorage.Core.Users.Queries;
+using PocketStorage.Core.Authentication.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Models;
 using PocketStorage.ResourceServer.Controllers.Base;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Migrations;
+using PocketStorage.BFF.Authorization.Enums;
 using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Constants;
 using PocketStorage.Domain.Enums;

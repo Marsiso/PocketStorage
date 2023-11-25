@@ -11,6 +11,7 @@ using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Services;
+using PocketStorage.BFF.Authorization.Extensions;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Core.Pipelines;
 using PocketStorage.Data;
@@ -44,6 +45,8 @@ services
     .AddAuthentication(options => options.Configure())
     .AddCookie()
     .AddOpenIdConnect(options => options.Configure(applicationSettings));
+
+services.AddPermissionAuthorization();
 
 services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
+using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Domain.Constants;
 using PocketStorage.Domain.Options;
 
@@ -26,6 +27,7 @@ public static class OpenIdConnectOptionsExtensions
         options.Scope.Add(OpenIddictScopeDefaults.Locale);
         options.Scope.Add(OpenIddictScopeDefaults.Zoneinfo);
         options.Scope.Add(OpenIddictScopeDefaults.UpdatedAt);
+        options.Scope.Add(PermitConstants.Scopes.Permissions);
         options.Scope.Add(OpenIddictConstants.Scopes.OfflineAccess);
         options.SaveTokens = true;
         options.GetClaimsFromUserInfoEndpoint = true;

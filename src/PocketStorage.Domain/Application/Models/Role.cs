@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using PocketStorage.BFF.Authorization.Enums;
 using PocketStorage.Domain.Contracts;
-using PocketStorage.Domain.Enums;
 
 namespace PocketStorage.Domain.Application.Models;
 

@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketStorage.Core.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketStorage.Application.Tests", "tests\PocketStorage.Application.Tests\PocketStorage.Application.Tests.csproj", "{20465731-CDED-4296-ADA3-7049E6822329}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PocketStorage.BFF.Authorization", "PocketStorage.BFF.Authorization\PocketStorage.BFF.Authorization.csproj", "{6C982014-990D-497D-BD03-50E438A1360D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{A34D9055-0F21-4774-B6F4-3DF86BADF509}"
+EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -33,6 +37,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{11F2ACE1-7F41-4B3C-A569-12A7C55A2560} = {837C9262-D1CB-4F0A-92CD-789753CDC20C}
 		{20465731-CDED-4296-ADA3-7049E6822329} = {837C9262-D1CB-4F0A-92CD-789753CDC20C}
+		{6C982014-990D-497D-BD03-50E438A1360D} = {A34D9055-0F21-4774-B6F4-3DF86BADF509}
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,5 +80,9 @@ Global
 		{A07F4785-B1ED-4C66-BA5F-564797D9ED44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A07F4785-B1ED-4C66-BA5F-564797D9ED44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A07F4785-B1ED-4C66-BA5F-564797D9ED44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C982014-990D-497D-BD03-50E438A1360D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C982014-990D-497D-BD03-50E438A1360D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C982014-990D-497D-BD03-50E438A1360D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C982014-990D-497D-BD03-50E438A1360D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

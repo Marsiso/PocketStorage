@@ -11,4 +11,8 @@
     <PackageReference Include="OpenIddict.EntityFrameworkCore.Models" Version="4.10.0"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\PocketStorage.BFF.Authorization\PocketStorage.BFF.Authorization.csproj"/>
+  </ItemGroup>
+
 </Project>

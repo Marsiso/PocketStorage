@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PocketStorage.BFF.Authorization.Enums;
 using PocketStorage.Core.Extensions;
 using PocketStorage.Data;
 using PocketStorage.Domain.Application.Models;

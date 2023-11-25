@@ -1,12 +1,17 @@
 ﻿using System.Collections.Immutable;
 using System.Globalization;
 using System.Net.Mime;
+using MediatR;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
+using PocketStorage.BFF.Authorization.Constants;
+using PocketStorage.BFF.Authorization.Enums;
+using PocketStorage.BFF.Authorization.Helpers;
+using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Constants;
 using PocketStorage.IdentityServer.Controllers.Common;
@@ -14,13 +19,13 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace PocketStorage.IdentityServer.Controllers;
 
-public class UserInfoController(UserManager<User> userManager) : WebControllerBase<UserInfoController>
+public class UserInfoController(UserManager<User> userManager, ISender sender) : WebControllerBase<UserInfoController>
 {
     [Authorize(AuthenticationSchemes = OpenIddictServerAspNetCoreDefaults.AuthenticationScheme)]
     [HttpGet("~/connect/userinfo")]
     [HttpPost("~/connect/userinfo")]
     [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
-    public async Task<IActionResult> Userinfo()
+    public async Task<IActionResult> Userinfo(CancellationToken cancellationToken)
     {
         User? user = await userManager.FindByIdAsync(User.GetClaim(Claims.Subject) ?? string.Empty);
         if (user is null)
@@ -35,10 +40,10 @@ public class UserInfoController(UserManager<User> userManager) : WebControllerBa
 
         // Note: the complete list of standard claims supported by the OpenID Connect specification
         // can be found here: "https://openid.net/specs/openid-connect-core-1_0.html#StandardClaims".
-        return Ok(await GetClaimsAsync(user));
+        return Ok(await GetClaimsAsync(user, cancellationToken));
     }
 
-    private async Task<Dictionary<string, object>> GetClaimsAsync(User user)
+    private async Task<Dictionary<string, object>> GetClaimsAsync(User user, CancellationToken cancellationToken)
     {
         Dictionary<string, object> claims = new(StringComparer.Ordinal)
         {
@@ -83,6 +88,14 @@ public class UserInfoController(UserManager<User> userManager) : WebControllerBa
 
                 case OpenIddictScopeDefaults.UpdatedAt:
                     claims[Claims.UpdatedAt] = user.DateUpdated.ToString(new CultureInfo(user.Culture));
+                    break;
+
+                case PermitConstants.Scopes.Permissions:
+                    Permission permissions = (await sender.Send(new FindUserRolesQuery(user.Id), cancellationToken)).Result?
+                        .Select(role => role.Permissions)
+                        .Aggregate(Permission.None, (accumulator, right) => accumulator | right) ?? Permission.None;
+
+                    claims[PermitConstants.Claims.Permissions] = PolicyNameHelpers.GetPolicyNameFor(permissions);
                     break;
 
                 default:
