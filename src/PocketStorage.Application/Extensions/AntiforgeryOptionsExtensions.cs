@@ -6,12 +6,12 @@ namespace PocketStorage.Application.Extensions;
 
 public static class AntiforgeryOptionsExtensions
 {
-    public static AntiforgeryOptions Configure(this AntiforgeryOptions options)
+    public static AntiforgeryOptions Configure(this AntiforgeryOptions options, bool development)
     {
         options.HeaderName = AntiforgeryConstants.HeaderName;
         options.Cookie.Name = AntiforgeryConstants.CookieName;
         options.Cookie.SameSite = SameSiteMode.Strict;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SecurePolicy = development ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
 
         return options;
     }

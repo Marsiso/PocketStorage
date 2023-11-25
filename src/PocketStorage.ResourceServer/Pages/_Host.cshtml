@@ -1,7 +1,9 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.OutputCaching
 @using OpenIddict.Abstractions
 @using PocketStorage.Domain.Constants
 @namespace PocketStorage.ResourceServer.Pages
+@attribute [OutputCache(Duration = 3600)]
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @{
     Layout = null;
