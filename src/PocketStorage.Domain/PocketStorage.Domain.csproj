@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\PocketStorage.BFF.Authorization\PocketStorage.BFF.Authorization.csproj"/>
+    <ProjectReference Include="..\PocketStorage.BFF.Authorization\PocketStorage.BFF.Authorization.csproj"/>
   </ItemGroup>
 
 </Project>

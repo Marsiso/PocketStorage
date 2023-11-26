@@ -10,13 +10,13 @@ namespace PocketStorage.Application.Extensions;
 
 public static class OpenIdConnectOptionsExtensions
 {
-    public static OpenIdConnectOptions Configure(this OpenIdConnectOptions options, ApplicationSettings settings)
+    public static OpenIdConnectOptions Configure(this OpenIdConnectOptions options, bool development, ApplicationSettings settings)
     {
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.Authority = settings.OpenIdConnect.Server.Authority;
         options.ClientId = settings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server").Id;
         options.ClientSecret = settings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server").Secret;
-        options.RequireHttpsMetadata = true;
+        options.RequireHttpsMetadata = !development;
         options.ResponseType = OpenIddictConstants.ResponseTypes.Code;
         options.UsePkce = true;
         options.Scope.Add(OpenIddictConstants.Scopes.Profile);

@@ -2,6 +2,7 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using PocketStorage.AppHost.ServiceDefaults;
 using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.BackgroundServices;
@@ -19,10 +20,13 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 string? solutionLocation = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.FullName ?? throw new InvalidOperationException();
 IConfigurationRoot globalSettings = new ConfigurationBuilder()
     .SetBasePath(solutionLocation)
-    .AddJsonFile("global.json")
+    .AddJsonFile("appsettings.json")
     .Build();
 
 ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
+
+builder.AddServiceDefaults();
+builder.AddRedisOutputCache("pocketstorage.redis");
 
 IServiceCollection services = builder.Services;
 IConfiguration configuration = builder.Configuration;
@@ -89,12 +93,17 @@ services.AddOpenIddict()
         builder.AddDevelopmentSigningCertificate();
 
         // Register the ASP.NET Core host and configure the ASP.NET Core options.
-        builder.UseAspNetCore()
+        OpenIddictServerAspNetCoreBuilder serverBuilder = builder.UseAspNetCore()
             .EnableAuthorizationEndpointPassthrough()
             .EnableLogoutEndpointPassthrough()
             .EnableTokenEndpointPassthrough()
             .EnableUserinfoEndpointPassthrough()
             .EnableStatusCodePagesIntegration();
+
+        if (environment.IsDevelopment())
+        {
+            serverBuilder.DisableTransportSecurityRequirement();
+        }
     })
     .AddValidation(options =>
     {
@@ -132,21 +141,24 @@ else
 {
     application.UseExceptionHandler("/Home/Error");
     application.UseHsts();
+    application.UseHttpsRedirection();
 }
 
-application.UseHttpsRedirection();
 application.UseStaticFiles();
-
 application.UseRouting();
 
 application.UseAuthentication();
 application.UseAuthorization();
+
+application.MapDefaultEndpoints();
 
 application.MapControllerRoute(
     "default",
     "{controller=Home}/{action=Index}/{id?}");
 
 application.MapRazorPages();
+
+application.UseOutputCache();
 
 application.Run();
 
