@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MudBlazor.Services;
 using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.BFF.Authorization.Extensions;
-using PocketStorage.BFF.Authorization.Services;
 using PocketStorage.Client;
 using PocketStorage.Client.Services;
 using PocketStorage.Client.Services.Contracts;
@@ -28,6 +28,8 @@ services.AddPermissionAuthorization();
 
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+services.AddMudServices();
 
 services.AddHttpClient("default", client =>
 {

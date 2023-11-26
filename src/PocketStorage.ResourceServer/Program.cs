@@ -136,7 +136,7 @@ if (environment.IsDevelopment())
 
 application.UseSecurityHeaders(SecurityHeadersHelpers.GetHeaderPolicyCollection(environment.IsDevelopment(), applicationSettings));
 
-if (environment.IsDevelopment())
+if (!environment.IsDevelopment())
 {
     application.UseHttpsRedirection();
 }

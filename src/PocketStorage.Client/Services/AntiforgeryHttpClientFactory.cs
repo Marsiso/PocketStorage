@@ -2,7 +2,7 @@
 using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.Client.Services.Contracts;
 
-namespace PocketStorage.BFF.Authorization.Services;
+namespace PocketStorage.Client.Services;
 
 public sealed class AntiforgeryHttpClientFactory(IHttpClientFactory httpClientFactory, IJSRuntime jSRuntime) : IAntiforgeryHttpClientFactory
 {

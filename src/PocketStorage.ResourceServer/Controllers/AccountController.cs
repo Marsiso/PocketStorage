@@ -13,7 +13,7 @@ public class AccountController : ApiControllerBase<AccountController>
     {
     }
 
-    [HttpGet("~/api/account/signin")]
+    [HttpGet("~/api/account/sign-in")]
     public ActionResult Login(string returnUrl) => Challenge(new AuthenticationProperties { RedirectUri = !string.IsNullOrEmpty(returnUrl) ? returnUrl : "/" });
 
     [ValidateAntiForgeryToken]

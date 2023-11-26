@@ -3,6 +3,6 @@
 public static class AuthorizationConstants
 {
     public const string AuthorizedClientName = "AntiforgeryHttpClient";
-    public const string LogInPath = "LogInPath";
-    public const string LogOutPath = "LogInPath";
+    public const string SignInRoute = "/api/account/sign-in";
+    public const string SignOutRoute = "/api/account/sign-out";
 }

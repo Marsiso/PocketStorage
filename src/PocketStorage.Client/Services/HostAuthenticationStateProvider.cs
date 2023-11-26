@@ -61,11 +61,11 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync() => new(await GetUser(true));
 
-    public void SignIn(string? customReturnUrl = default)
+    public void SignIn(string? customReturnUrl = null)
     {
-        string? returnUrl = customReturnUrl != null ? navigation.ToAbsoluteUri(customReturnUrl).ToString() : default;
+        string? returnUrl = customReturnUrl != null ? navigation.ToAbsoluteUri(customReturnUrl).ToString() : null;
         string encodedReturnUrl = Uri.EscapeDataString(returnUrl ?? navigation.Uri);
-        Uri signinUrl = navigation.ToAbsoluteUri($"{AuthorizationConstants.LogInPath}?returnUrl={encodedReturnUrl}");
+        Uri signinUrl = navigation.ToAbsoluteUri($"{AuthorizationConstants.SignInRoute}?returnUrl={encodedReturnUrl}");
         navigation.NavigateTo(signinUrl.ToString(), true);
     }
 }
