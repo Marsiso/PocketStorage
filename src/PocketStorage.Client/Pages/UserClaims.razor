@@ -1,9 +1,11 @@
-﻿@page "/user/claims"
+﻿@attribute [Route(Routes.User.Claims)]
+@attribute [Permit(Permissions = Permission.ViewUsers)]
+
 @using System.Security.Claims
 @using PocketStorage.Client.Services
 @using PocketStorage.BFF.Authorization.Filters
 @using PocketStorage.BFF.Authorization.Enums
-@attribute [Permit(Permissions = Permission.ViewUsers)]
+
 @inject HostAuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Claims principal</PageTitle>
