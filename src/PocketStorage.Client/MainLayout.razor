@@ -2,14 +2,11 @@
 @using PocketStorage.BFF.Authorization.Components
 @using Microsoft.Extensions.Localization
 @using PocketStorage.Client.Shared.ResourceFiles
-@using System.Security.Claims
-@using System.Globalization
+@using PocketStorage.Client.Shared.Components.Layout
 
 @inherits LayoutComponentBase
 
-@inject NavigationManager Navigation
 @inject IStringLocalizer<Resource> Localizer
-@inject IJSRuntime  JavaScriptRuntime
 
 <MudThemeProvider IsDarkMode="true"/>
 <MudDialogProvider/>
@@ -20,60 +17,25 @@
         <MudLayout>
             <MudAppBar Color="Color.Inherit">
                 <MudButton Href="/" StartIcon="@Icons.Material.Rounded.RocketLaunch" IconSize="Size.Large" Color="Color.Inherit" Variant="Variant.Text">
-                    <MudText Typo="Typo.h6" Inline="true">@Localizer["Common.AppName"]</MudText>
+                    <MudText Typo="Typo.h6" Inline="true">@Localizer["Common_AppName"]</MudText>
                 </MudButton>
                 <MudButton Href="/" StartIcon="@Icons.Material.Rounded.Home" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
-                    <MudText>@Localizer["MainLayout.HomeButton"]</MudText>
+                    <MudText>@Localizer["Layout_MainLayout_HomeButton"]</MudText>
                 </MudButton>
                 <MudButton Href="/privacy" StartIcon="@Icons.Material.Rounded.Security" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
-                    <MudText>@Localizer["MainLayout.PrivacyButton"]</MudText>
+                    <MudText>@Localizer["Layout_MainLayout_PrivacyButton"]</MudText>
                 </MudButton>
                 <PermitView Permissions="Permission.ViewUsers">
                     <Authorized>
                         <MudButton Href="/user/claims" StartIcon="@Icons.Material.Rounded.Shield" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
-                            <MudText>@Localizer["MainLayout.ClaimsButton"]</MudText>
+                            <MudText>@Localizer["Layout_MainLayout_ClaimsButton"]</MudText>
                         </MudButton>
                     </Authorized>
                 </PermitView>
                 <MudSpacer/>
-                <MudButton StartIcon="@Icons.Material.Rounded.Language" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2 pr-0" OnClick="@SetCzechCulture">
-                    <MudText>CS</MudText>
-                </MudButton>
-                <MudButton Color="Color.Inherit" Variant="Variant.Text" Class="pl-0" OnClick="@SetEnglishCulture">
-                    <MudText>EN</MudText>
-                </MudButton>
-                <PermitView>
-                    <Authorized>
-                        <form action="api/account/sign-out" method="post">
-                            <AntiForgeryTokenInput/>
-                            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Logout" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
-                                <MudText>@Localizer["MainLayout.SignOutButton"]</MudText>
-                            </MudButton>
-                        </form>
-                        <MudMenu Variant="Variant.Text" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.BottomLeft" Class="ml-2">
-                            <ActivatorContent>
-                                <MudAvatar Rounded="true" Variant="Variant.Text"/>
-                            </ActivatorContent>
-                            <ChildContent>
-                                <MudMenuItem Disabled="true" Icon="@Icons.Material.Rounded.Person3" IconColor="Color.Inherit">
-                                    @ParentAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.GivenName)?.Value  @ParentAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.Surname)?.Value
-                                </MudMenuItem>
-                                <MudMenuItem Disabled="true" Icon="@Icons.Material.Rounded.Email" IconColor="Color.Inherit" Class="mb-4">
-                                    @ParentAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.Email)?.Value
-                                </MudMenuItem>
-                                <MudMenuItem Icon="@Icons.Material.Rounded.AccountBox" IconColor="Color.Inherit">@Localizer["MainLayout.AccountButton"]</MudMenuItem>
-                            </ChildContent>
-                        </MudMenu>
-                    </Authorized>
-                    <NotAuthorized>
-                        <form action="api/account/sign-in" method="post">
-                            <AntiForgeryTokenInput/>
-                            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Login" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
-                                <MudText>@Localizer["MainLayout.SignInButton"]</MudText>
-                            </MudButton>
-                        </form>
-                    </NotAuthorized>
-                </PermitView>
+                <CultureSelector/>
+                <Authenticator/>
+                <Avatar/>
             </MudAppBar>
             <MudMainContent>
                 <MudContainer Class="pt-6">
@@ -95,23 +57,3 @@
         </MudStack>
     </Authorizing>
 </PermitView>
-
-@code {
-    public void SetCzechCulture() => Culture = new CultureInfo("cs");
-    public void SetEnglishCulture() => Culture = new CultureInfo("en");
-
-    public CultureInfo Culture
-    {
-        get => CultureInfo.CurrentCulture;
-        set
-        {
-            if (Equals(CultureInfo.CurrentCulture, value))
-            {
-                return;
-            }
-
-            (JavaScriptRuntime as IJSInProcessRuntime)?.InvokeVoid("blazorCulture.set", value.Name);
-            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
-        }
-    }
-}

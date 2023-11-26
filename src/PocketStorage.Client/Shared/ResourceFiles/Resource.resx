@@ -18,25 +18,25 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="Common.AppName" xml:space="preserve">
+  <data name="Common_AppName" xml:space="preserve">
     <value>Pocket Storage</value>
   </data>
-  <data name="MainLayout.HomeButton" xml:space="preserve">
+  <data name="Layout_MainLayout_HomeButton" xml:space="preserve">
     <value>Home</value>
   </data>
-  <data name="MainLayout.PrivacyButton" xml:space="preserve">
+  <data name="Layout_MainLayout_PrivacyButton" xml:space="preserve">
     <value>Privacy</value>
   </data>
-  <data name="MainLayout.ClaimsButton" xml:space="preserve">
+  <data name="Layout_MainLayout_ClaimsButton" xml:space="preserve">
     <value>Claims</value>
   </data>
-  <data name="MainLayout.SignOutButton" xml:space="preserve">
-    <value>Sign out</value>
+  <data name="Layout_Avatar_AccountButton" xml:space="preserve">
+    <value>Account</value>
   </data>
-  <data name="MainLayout.SignInButton" xml:space="preserve">
+  <data name="Layout_Authenticator_SignInButton" xml:space="preserve">
     <value>Sign in</value>
   </data>
-  <data name="MainLayout.AccountButton" xml:space="preserve">
-    <value>Account</value>
+  <data name="Layout_Authenticator_SignOutButton" xml:space="preserve">
+    <value>Sign out</value>
   </data>
 </root>

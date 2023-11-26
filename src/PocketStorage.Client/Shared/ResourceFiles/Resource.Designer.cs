@@ -64,61 +64,61 @@ namespace PocketStorage.Client.Shared.ResourceFiles {
         /// </summary>
         internal static string Common_AppName {
             get {
-                return ResourceManager.GetString("Common.AppName", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Account.
-        /// </summary>
-        internal static string MainLayout_AccountButton {
-            get {
-                return ResourceManager.GetString("MainLayout.AccountButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Claims.
-        /// </summary>
-        internal static string MainLayout_ClaimsButton {
-            get {
-                return ResourceManager.GetString("MainLayout.ClaimsButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Home.
-        /// </summary>
-        internal static string MainLayout_HomeButton {
-            get {
-                return ResourceManager.GetString("MainLayout.HomeButton", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Privacy.
-        /// </summary>
-        internal static string MainLayout_PrivacyButton {
-            get {
-                return ResourceManager.GetString("MainLayout.PrivacyButton", resourceCulture);
+                return ResourceManager.GetString("Common_AppName", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sign in.
         /// </summary>
-        internal static string MainLayout_SignInButton {
+        internal static string Layout_Authenticator_SignInButton {
             get {
-                return ResourceManager.GetString("MainLayout.SignInButton", resourceCulture);
+                return ResourceManager.GetString("Layout_Authenticator_SignInButton", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to Sign out.
         /// </summary>
-        internal static string MainLayout_SignOutButton {
+        internal static string Layout_Authenticator_SignOutButton {
             get {
-                return ResourceManager.GetString("MainLayout.SignOutButton", resourceCulture);
+                return ResourceManager.GetString("Layout_Authenticator_SignOutButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Account.
+        /// </summary>
+        internal static string Layout_Avatar_AccountButton {
+            get {
+                return ResourceManager.GetString("Layout_Avatar_AccountButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Claims.
+        /// </summary>
+        internal static string Layout_MainLayout_ClaimsButton {
+            get {
+                return ResourceManager.GetString("Layout_MainLayout_ClaimsButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Home.
+        /// </summary>
+        internal static string Layout_MainLayout_HomeButton {
+            get {
+                return ResourceManager.GetString("Layout_MainLayout_HomeButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Privacy.
+        /// </summary>
+        internal static string Layout_MainLayout_PrivacyButton {
+            get {
+                return ResourceManager.GetString("Layout_MainLayout_PrivacyButton", resourceCulture);
             }
         }
     }
