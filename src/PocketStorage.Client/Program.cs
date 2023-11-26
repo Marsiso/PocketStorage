@@ -1,9 +1,11 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using System.Net.Mime;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.JSInterop;
 using MudBlazor.Services;
 using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.BFF.Authorization.Extensions;
@@ -11,6 +13,7 @@ using PocketStorage.Client;
 using PocketStorage.Client.Services;
 using PocketStorage.Client.Services.Contracts;
 using PocketStorage.Integration;
+using static System.String;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -31,6 +34,7 @@ builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
 services.AddMudServices();
+services.AddLocalization();
 
 services.AddHttpClient("default", client =>
 {
@@ -50,4 +54,23 @@ services.AddTransient<IAntiforgeryHttpClientFactory, AntiforgeryHttpClientFactor
 services.AddTransient<NSwagClient>();
 services.AddTransient<PocketStorageClient>();
 
-await builder.Build().RunAsync();
+WebAssemblyHost host = builder.Build();
+
+CultureInfo culture;
+IJSRuntime javascriptRuntime = host.Services.GetRequiredService<IJSRuntime>();
+string cultureString = await javascriptRuntime.InvokeAsync<string>("blazorCulture.get");
+
+if (IsNullOrWhiteSpace(cultureString))
+{
+    culture = new CultureInfo("en");
+    await javascriptRuntime.InvokeVoidAsync("blazorCulture.set", "en");
+}
+else
+{
+    culture = new CultureInfo(cultureString);
+}
+
+CultureInfo.DefaultThreadCurrentCulture = culture;
+CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+await host.RunAsync();

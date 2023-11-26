@@ -1,8 +1,11 @@
+using System.Globalization;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Localization;
 using NSwag;
 using NSwag.AspNetCore;
 using NSwag.Generation.Processors.Security;
@@ -14,11 +17,13 @@ using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Helpers;
 using PocketStorage.Application.Services;
 using PocketStorage.BFF.Authorization.Extensions;
+using PocketStorage.Client;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Core.Pipelines;
 using PocketStorage.Data;
 using PocketStorage.Data.Interceptors;
 using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Constants;
 using PocketStorage.Domain.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -54,6 +59,8 @@ services
 services.AddPermissionAuthorization();
 
 services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
+services.AddLocalization(options => options.ResourcesPath = "Resources");
+services.AddTransient<IStringLocalizer, StringLocalizer<App>>();
 
 services
     .AddRazorPages()
@@ -116,6 +123,14 @@ builder.Services.AddOpenApiDocument(options =>
 });
 
 WebApplication application = builder.Build();
+
+CultureInfo[] supportedCultures = { new CultureInfo(CultureDefaults.English), new CultureInfo(CultureDefaults.Czech) };
+application.UseRequestLocalization(new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(CultureDefaults.Default),
+    SupportedCultures = supportedCultures,
+    SupportedUICultures = supportedCultures
+});
 
 if (environment.IsDevelopment())
 {
