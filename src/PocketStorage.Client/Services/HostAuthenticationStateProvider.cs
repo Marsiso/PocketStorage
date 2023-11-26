@@ -1,14 +1,12 @@
-﻿using System.Net.Http.Json;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
 using PocketStorage.BFF.Authorization.Constants;
-using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Models;
+using PocketStorage.Integration;
 
 namespace PocketStorage.Client.Services;
 
-public sealed class HostAuthenticationStateProvider(NavigationManager navigation, HttpClient client, ILogger<HostAuthenticationStateProvider> logger) : AuthenticationStateProvider
+public sealed class HostAuthenticationStateProvider(NavigationManager navigation, PocketStorageClient client, ILogger<HostAuthenticationStateProvider> logger) : AuthenticationStateProvider
 {
     private static readonly TimeSpan _cacheRefreshInterval = TimeSpan.FromSeconds(60);
 
@@ -17,27 +15,26 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
 
     private async Task<ClaimsPrincipal> FetchUser()
     {
-        ApiCallResponse<UserInfo>? response = null;
+        ApiCallResponseWrapper<ApiCallResponseOfUserInfo>? response = null;
 
         try
         {
-            logger.LogInformation("{BaseAddress}", client.BaseAddress?.ToString());
-            response = await client.GetFromJsonAsync<ApiCallResponse<UserInfo>>("api/userinfo");
+            response = await client.CallAsync(client => client.ApiUserinfoAsync());
         }
         catch (Exception exception)
         {
-            logger.LogWarning(exception, $"[{nameof(HostAuthenticationStateProvider)}] Fetch user failure.");
+            logger.LogWarning(exception, $"Service: `{nameof(HostAuthenticationStateProvider)}` Message: `Fetch user failure.`.");
         }
 
-        if (response is not { Result.IsAuthenticated: true })
+        if (response is not { Result: { Status: RequestStatus.Success, Result.IsAuthenticated: true } })
         {
             return new ClaimsPrincipal(new ClaimsIdentity());
         }
 
-        ClaimsIdentity identity = new(nameof(HostAuthenticationStateProvider), response.Value.Result.NameClaimType, response.Value.Result.RoleClaimType);
-        if (response.Value.Result.Claims is { Count: > 0 })
+        ClaimsIdentity identity = new(nameof(HostAuthenticationStateProvider), response.Result.Result.NameClaimType, response.Result.Result.RoleClaimType);
+        if (response.Result.Result is { Claims.Count: > 0 })
         {
-            identity.AddClaims(response.Value.Result.Claims.Select(claimValue => new Claim(claimValue.Type, claimValue.Value)));
+            identity.AddClaims(response.Result.Result.Claims.Select(claimValue => new Claim(claimValue.Type, claimValue.Value)));
         }
 
         return new ClaimsPrincipal(identity);
@@ -48,11 +45,12 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
         DateTimeOffset dateTimeOffset = DateTimeOffset.Now;
         if (useCache && dateTimeOffset < _lastCheck + _cacheRefreshInterval)
         {
-            logger.LogDebug($"[{nameof(HostAuthenticationStateProvider)}] Retrieving user from cache.");
+            logger.LogDebug($"Service: `{nameof(HostAuthenticationStateProvider)}` Message: `Retrieving user from cache.`.");
             return _cachedUser;
         }
 
-        logger.LogDebug($"[{nameof(HostAuthenticationStateProvider)}] Fetching user.");
+        logger.LogDebug($"Service: `{nameof(HostAuthenticationStateProvider)}` Message: `Fetching user.`");
+
         _cachedUser = await FetchUser();
         _lastCheck = dateTimeOffset;
 
@@ -65,7 +63,9 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
     {
         string? returnUrl = customReturnUrl != null ? navigation.ToAbsoluteUri(customReturnUrl).ToString() : null;
         string encodedReturnUrl = Uri.EscapeDataString(returnUrl ?? navigation.Uri);
-        Uri signinUrl = navigation.ToAbsoluteUri($"{AuthorizationConstants.SignInRoute}?returnUrl={encodedReturnUrl}");
-        navigation.NavigateTo(signinUrl.ToString(), true);
+
+        Uri signInUrl = navigation.ToAbsoluteUri($"{AuthorizationConstants.SignInRoute}?returnUrl={encodedReturnUrl}");
+
+        navigation.NavigateTo(signInUrl.ToString(), true);
     }
 }

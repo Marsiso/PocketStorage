@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PocketStorage.Domain\PocketStorage.Domain.csproj"/>
+    <ProjectReference Include="..\PocketStorage.Integration\PocketStorage.Integration.csproj"/>
   </ItemGroup>
 
 </Project>

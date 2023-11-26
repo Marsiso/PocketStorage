@@ -10,6 +10,7 @@ using PocketStorage.BFF.Authorization.Extensions;
 using PocketStorage.Client;
 using PocketStorage.Client.Services;
 using PocketStorage.Client.Services.Contracts;
+using PocketStorage.Integration;
 
 WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
 
@@ -45,5 +46,8 @@ services.AddHttpClient(AuthorizationConstants.AuthorizedClientName, client =>
 
 services.AddTransient(serviceProvider => serviceProvider.GetRequiredService<IHttpClientFactory>().CreateClient("default"));
 services.AddTransient<IAntiforgeryHttpClientFactory, AntiforgeryHttpClientFactory>();
+
+services.AddTransient<NSwagClient>();
+services.AddTransient<PocketStorageClient>();
 
 await builder.Build().RunAsync();
