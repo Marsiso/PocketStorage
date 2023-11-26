@@ -4,6 +4,8 @@ namespace PocketStorage.Application.Services;
 
 public class ArgonPasswordHasherOptions
 {
+    public const string Delimiter = ".";
+
     public required string? Pepper { get; set; }
 
     /// <summary>

@@ -36,7 +36,7 @@ public class ArgonPasswordHasher<TUser>(IOptions<ArgonPasswordHasherOptions> opt
 
         Guard.IsEqualTo(passwordHashingResult, 0);
 
-        return $"{Convert.ToBase64String(derivedKeyBytes)}.{Convert.ToBase64String(randomlyGeneratedSaltBytes)}";
+        return $"{Convert.ToBase64String(derivedKeyBytes)}{ArgonPasswordHasherOptions.Delimiter}{Convert.ToBase64String(randomlyGeneratedSaltBytes)}";
     }
 
     public PasswordVerificationResult VerifyHashedPassword(TUser user, string hashedPassword, string providedPassword)
@@ -49,7 +49,7 @@ public class ArgonPasswordHasher<TUser>(IOptions<ArgonPasswordHasherOptions> opt
 
         byte[] derivedKeyBytes = new byte[Options.KeySize];
 
-        string[] hashedPasswordWithSaltBase64 = hashedPassword.Split('.', StringSplitOptions.RemoveEmptyEntries);
+        string[] hashedPasswordWithSaltBase64 = hashedPassword.Split(ArgonPasswordHasherOptions.Delimiter, StringSplitOptions.RemoveEmptyEntries);
 
         Guard.HasSizeEqualTo(hashedPasswordWithSaltBase64, 2);
 
