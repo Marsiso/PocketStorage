@@ -1,43 +1,20 @@
-﻿@attribute [Route(Routes.User.Claims)]
+﻿@using PocketStorage.BFF.Authorization.Filters
+@using PocketStorage.BFF.Authorization.Enums
+@using PocketStorage.BFF.Authorization.Components
+@attribute [Route(Routes.User.Claims)]
 @attribute [Permit(Permissions = Permission.ViewUsers)]
 
-@using System.Security.Claims
-@using PocketStorage.Client.Services
-@using PocketStorage.BFF.Authorization.Filters
-@using PocketStorage.BFF.Authorization.Enums
-
-@inject HostAuthenticationStateProvider AuthenticationStateProvider
-
-<PageTitle>Claims principal</PageTitle>
-
-<MudText Typo="Typo.h4" GutterBottom="true">Claims</MudText>
-
-@if (Claims.Any())
-{
-    <MudDataGrid Items="@Claims">
-        <Columns>
-            <PropertyColumn Property="item => item.Type" Title="Type"/>
-            <PropertyColumn Property="item => item.Value" Title="Value"/>
-        </Columns>
-    </MudDataGrid>
-}
-else
-{
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="50%" Height="50px"/>
-    <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="50%" Height="250px"/>
-}
-
-@code {
-    public IEnumerable<Claim> Claims { get; set; } = Enumerable.Empty<Claim>();
-
-    protected override async Task OnInitializedAsync()
-    {
-        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var principal = state.User;
-
-        if (principal.Identity is { IsAuthenticated: true })
-        {
-            Claims = principal.Claims;
-        }
-    }
-}
+<PermitView Context="AuthenticationState" Permissions="Permission.EditUsers">
+    <Authorized>
+        <MudDataGrid Items="@AuthenticationState.User.Claims">
+            <Columns>
+                <PropertyColumn Property="item => item.Type" Title="Type"/>
+                <PropertyColumn Property="item => item.Value" Title="Value"/>
+            </Columns>
+        </MudDataGrid>
+    </Authorized>
+    <Authorizing>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="50%" Height="50px"/>
+        <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="50%" Height="250px"/>
+    </Authorizing>
+</PermitView>
