@@ -1,24 +1,20 @@
-﻿@using PocketStorage.Client.Shared.ResourceFiles
-@using PocketStorage.BFF.Authorization.Components
-@using Microsoft.Extensions.Localization
-@using System.Security.Claims
-
+﻿@using System.Security.Claims
 @inject IStringLocalizer<Resource> Localizer
 
 <PermitView Context="ProfileAuthenticationState">
     <Authorized>
-        <MudMenu Variant="Variant.Text" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.BottomLeft" Class="ml-4">
+        <MudMenu Variant="Variant.Text" AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.BottomLeft">
             <ActivatorContent>
                 <MudAvatar Rounded="true" Variant="Variant.Text"/>
             </ActivatorContent>
             <ChildContent>
                 <MudMenuItem Disabled="true" Icon="@Icons.Material.Rounded.Person3" IconColor="Color.Inherit">
-                    @ProfileAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.GivenName)?.Value  @ProfileAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.Surname)?.Value
+                    @ProfileAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.GivenName)?.Value @ProfileAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.Surname)?.Value
                 </MudMenuItem>
                 <MudMenuItem Disabled="true" Icon="@Icons.Material.Rounded.Email" IconColor="Color.Inherit" Class="mb-4">
                     @ProfileAuthenticationState.User.FindFirst(claim => claim.Type == ClaimTypes.Email)?.Value
                 </MudMenuItem>
-                <MudMenuItem Icon="@Icons.Material.Rounded.AccountBox" IconColor="Color.Inherit">@Localizer["Layout_Avatar_AccountButton"]</MudMenuItem>
+                <MudMenuItem Href="@Routes.Account.Index" Icon="@Icons.Material.Rounded.AccountBox" IconColor="Color.Inherit">@Localizer["Layout_Avatar_AccountButton"]</MudMenuItem>
             </ChildContent>
         </MudMenu>
     </Authorized>

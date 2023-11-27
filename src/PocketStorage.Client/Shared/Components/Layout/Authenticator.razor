@@ -1,14 +1,10 @@
-﻿@using PocketStorage.Client.Shared.ResourceFiles
-@using PocketStorage.BFF.Authorization.Components
-@using Microsoft.Extensions.Localization
-
-@inject IStringLocalizer<Resource> Localizer
+﻿@inject IStringLocalizer<Resource> Localizer
 
 <PermitView Context="AuthenticatorAuthenticationState">
     <Authorized>
         <form action="api/account/sign-out" method="post">
             <AntiForgeryTokenInput/>
-            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Logout" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Logout" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text">
                 <MudText>@Localizer["Layout_Authenticator_SignOutButton"]</MudText>
             </MudButton>
         </form>
@@ -16,7 +12,7 @@
     <NotAuthorized>
         <form action="api/account/sign-in" method="post">
             <AntiForgeryTokenInput/>
-            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Login" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text" Class="ml-2">
+            <MudButton ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Rounded.Login" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text">
                 <MudText>@Localizer["Layout_Authenticator_SignInButton"]</MudText>
             </MudButton>
         </form>
