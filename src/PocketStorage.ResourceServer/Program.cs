@@ -37,7 +37,7 @@ IConfigurationRoot globalSettings = new ConfigurationBuilder()
 ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
 
 builder.AddServiceDefaults();
-builder.AddRedisOutputCache("pocketstorage.redis");
+builder.AddRedisOutputCache("redis-cache");
 
 IServiceCollection services = builder.Services;
 IConfiguration configuration = builder.Configuration;
@@ -86,7 +86,8 @@ services.AddMediatR(options =>
     options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehaviour<,>));
 });
 
-builder.Services.AddOpenApiDocument(options =>
+services.AddEndpointsApiExplorer();
+services.AddOpenApiDocument(options =>
 {
     options.PostProcess = document =>
     {
@@ -124,13 +125,8 @@ builder.Services.AddOpenApiDocument(options =>
 
 WebApplication application = builder.Build();
 
-CultureInfo[] supportedCultures = { new CultureInfo(CultureDefaults.English), new CultureInfo(CultureDefaults.Czech) };
-application.UseRequestLocalization(new RequestLocalizationOptions
-{
-    DefaultRequestCulture = new RequestCulture(CultureDefaults.Default),
-    SupportedCultures = supportedCultures,
-    SupportedUICultures = supportedCultures
-});
+CultureInfo[] supportedCultures = { new(CultureDefaults.English), new(CultureDefaults.Czech) };
+application.UseRequestLocalization(new RequestLocalizationOptions { DefaultRequestCulture = new RequestCulture(CultureDefaults.Default), SupportedCultures = supportedCultures, SupportedUICultures = supportedCultures });
 
 if (environment.IsDevelopment())
 {
@@ -164,11 +160,13 @@ application.UseNoUnauthorizedRedirect("/api");
 application.UseAuthentication();
 application.UseAuthorization();
 
+
 application.MapDefaultEndpoints();
 application.MapRazorPages();
 application.MapControllers();
 application.MapNotFound("/api/{**segment}");
 application.MapFallbackToPage("/_Host");
+application.MapGet("startup", () => new { GrafanaUrl = (string)configuration["GRAFANA_URL"] });
 
 application.UseOutputCache();
 

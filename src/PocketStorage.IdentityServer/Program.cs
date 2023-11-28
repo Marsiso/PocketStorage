@@ -26,7 +26,7 @@ IConfigurationRoot globalSettings = new ConfigurationBuilder()
 ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
 
 builder.AddServiceDefaults();
-builder.AddRedisOutputCache("pocketstorage.redis");
+builder.AddRedisOutputCache("redis-cache");
 
 IServiceCollection services = builder.Services;
 IConfiguration configuration = builder.Configuration;
