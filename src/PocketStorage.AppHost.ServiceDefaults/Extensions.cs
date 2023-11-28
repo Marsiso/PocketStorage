@@ -20,10 +20,7 @@ public static class Extensions
         builder.Services.AddServiceDiscovery();
         builder.Services.ConfigureHttpClientDefaults(http =>
         {
-            // Turn on resilience by default.
             http.AddStandardResilienceHandler();
-
-            // Turn on service discovery by default.
             http.UseServiceDiscovery();
         });
 
@@ -48,7 +45,6 @@ public static class Extensions
             {
                 if (builder.Environment.IsDevelopment())
                 {
-                    // We want to view all traces in development
                     tracing.SetSampler(new AlwaysOnSampler());
                 }
 
@@ -75,13 +71,8 @@ public static class Extensions
         builder.Services.ConfigureOpenTelemetryMeterProvider(metrics => metrics.AddOtlpExporter());
         builder.Services.ConfigureOpenTelemetryTracerProvider(tracing => tracing.AddOtlpExporter());
 
-        // Uncomment the following lines to enable the Prometheus exporter (requires the OpenTelemetry.Exporter.Prometheus.AspNetCore package).
-        // builder.Services.AddOpenTelemetry()
-        //    .WithMetrics(metrics => metrics.AddPrometheusExporter());
-
-        // Uncomment the following lines to enable the Azure Monitor exporter (requires the Azure.Monitor.OpenTelemetry.Exporter package).
-        // builder.Services.AddOpenTelemetry()
-        //    .UseAzureMonitor();
+        builder.Services.AddOpenTelemetry()
+            .WithMetrics(metrics => metrics.AddPrometheusExporter());
 
         return builder;
     }
@@ -97,13 +88,8 @@ public static class Extensions
 
     public static WebApplication MapDefaultEndpoints(this WebApplication application)
     {
-        // Uncomment the following line to enable the Prometheus endpoint (requires the OpenTelemetry.Exporter.Prometheus.AspNetCore package).
-        // app.MapPrometheusScrapingEndpoint();
-
-        // All health checks must pass for app to be considered ready to accept traffic after starting.
+        application.MapPrometheusScrapingEndpoint();
         application.MapHealthChecks("/health");
-
-        // Only health checks tagged with the "live" tag must pass for app to be considered alive.
         application.MapHealthChecks("/alive", new HealthCheckOptions { Predicate = r => r.Tags.Contains("live") });
 
         return application;
