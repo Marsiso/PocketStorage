@@ -1,23 +1,28 @@
 ﻿@using System.Globalization
-@using Microsoft.Extensions.Localization
-@using PocketStorage.Client.Shared.ResourceFiles
-
 @inject NavigationManager Navigation
-@inject IJSRuntime  JavaScriptRuntime
+@inject IJSRuntime JavaScriptRuntime
 @inject IStringLocalizer<Resource> Localizer
 
-<MudButtonGroup Color="Color.Inherit" Variant="Variant.Text">
-    <MudButton Color="Color.Inherit" Variant="Variant.Text" OnClick="@SetCzechCulture">
+<MudStack Row="true" AlignItems="AlignItems.Center" Spacing="6">
+    <MudLink Color="Color.Inherit" OnClick="@SetCzechCulture">
         <MudText>CS</MudText>
-    </MudButton>
-    <MudButton Color="Color.Inherit" Variant="Variant.Text" OnClick="@SetEnglishCulture">
+    </MudLink>
+    <MudLink Color="Color.Inherit" OnClick="@SetEnglishCulture">
         <MudText>EN</MudText>
-    </MudButton>
-</MudButtonGroup>
+    </MudLink>
+</MudStack>
 
 @code {
-    public void SetCzechCulture() => Culture = new CultureInfo("cs");
-    public void SetEnglishCulture() => Culture = new CultureInfo("en");
+
+    public void SetCzechCulture()
+    {
+        Culture = new CultureInfo("cs");
+    }
+
+    public void SetEnglishCulture()
+    {
+        Culture = new CultureInfo("en");
+    }
 
     public CultureInfo Culture
     {
@@ -30,7 +35,8 @@
             }
 
             (JavaScriptRuntime as IJSInProcessRuntime)?.InvokeVoid("blazorCulture.set", value.Name);
-            Navigation.NavigateTo(Navigation.Uri, forceLoad: true);
+            Navigation.NavigateTo(Navigation.Uri, true);
         }
     }
+
 }
