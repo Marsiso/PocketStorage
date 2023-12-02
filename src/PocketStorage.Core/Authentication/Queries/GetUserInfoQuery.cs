@@ -4,29 +4,29 @@ using Microsoft.AspNetCore.Http;
 using OpenIddict.Abstractions;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Application.Models;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Enums;
 using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Core.Authentication.Queries;
 
-public class GetUserInfoQuery : IRequest<ApiCallResponse<UserInfo>>
+public class GetUserInfoQuery : IRequest<GetUserInfoQueryResult>
 {
 }
 
-public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpContextAccessor) : IRequestHandler<GetUserInfoQuery, ApiCallResponse<UserInfo>>
+public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpContextAccessor) : IRequestHandler<GetUserInfoQuery, GetUserInfoQueryResult>
 {
-    public async Task<ApiCallResponse<UserInfo>> Handle(GetUserInfoQuery request, CancellationToken cancellationToken)
+    public async Task<GetUserInfoQueryResult> Handle(GetUserInfoQuery request, CancellationToken cancellationToken)
     {
         if (httpContextAccessor.HttpContext is not { User.Identity.IsAuthenticated: true })
         {
-            return new ApiCallResponse<UserInfo>(RequestStatus.Success, UserInfo.Anonymous, null);
+            return new GetUserInfoQueryResult(UserInfo.Anonymous);
         }
 
-        ApiCallResponse<User> result = await sender.Send(new GetUserQuery(), cancellationToken);
-        if (result is { Status: RequestStatus.EntityNotFound or RequestStatus.Fail or RequestStatus.Cancelled or RequestStatus.Error })
+        GetUserQueryResult result = await sender.Send(new GetUserQuery(), cancellationToken);
+        if (result is not { Status: RequestStatus.Success, Result: not null })
         {
-            return new ApiCallResponse<UserInfo>(result.Status, null, result.Error);
+            return new GetUserInfoQueryResult(result.Status, result.Error);
         }
 
         UserInfo userinfo = new() { IsAuthenticated = true };
@@ -43,7 +43,7 @@ public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpCo
 
         if (!httpContextAccessor.HttpContext.User.Claims.Any())
         {
-            return new ApiCallResponse<UserInfo>(RequestStatus.Success, userinfo, null);
+            return new GetUserInfoQueryResult(userinfo);
         }
 
         userinfo.Claims = new List<ClaimValue>();
@@ -57,6 +57,16 @@ public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpCo
             userinfo.Claims.Add(new ClaimValue(claim.Type, claim.Value));
         }
 
-        return new ApiCallResponse<UserInfo>(RequestStatus.Success, userinfo, null);
+        return new GetUserInfoQueryResult(userinfo);
     }
+}
+
+public class GetUserInfoQueryResult(RequestStatus status, RequestError? error) : IRequestResult
+{
+    public GetUserInfoQueryResult(UserInfo? result) : this(RequestStatus.Success, null) => Result = result;
+
+    public UserInfo? Result { get; set; }
+
+    public RequestStatus Status { get; set; } = status;
+    public RequestError? Error { get; set; } = error;
 }

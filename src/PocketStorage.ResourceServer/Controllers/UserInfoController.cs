@@ -3,8 +3,6 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PocketStorage.Core.Authentication.Queries;
-using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Models;
 using PocketStorage.ResourceServer.Controllers.Base;
 
 namespace PocketStorage.ResourceServer.Controllers;
@@ -18,9 +16,9 @@ public class UserInfoController(IMediator mediator, ILogger<UserInfoController> 
     /// <returns>Claims associated with the current user.</returns>
     [HttpGet("~/api/userinfo")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(ApiCallResponse<UserInfo>), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(ApiCallResponse<UserInfo>), StatusCodes.Status400BadRequest, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(ApiCallResponse<UserInfo>), StatusCodes.Status404NotFound, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(ApiCallResponse<UserInfo>), StatusCodes.Status500InternalServerError, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status400BadRequest, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status404NotFound, MediaTypeNames.Application.Json)]
+    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status500InternalServerError, MediaTypeNames.Application.Json)]
     public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken) => ConvertToActionResult(await mediator.Send(new GetUserInfoQuery(), cancellationToken));
 }

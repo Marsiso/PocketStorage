@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Mvc;
+using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Enums;
-using PocketStorage.Domain.Models;
 
 namespace PocketStorage.ResourceServer.Controllers.Base;
 
@@ -10,7 +10,7 @@ public abstract class ApiControllerBase<TController>(ILogger<TController> logger
 {
     protected readonly ILogger<TController> Logger = logger;
 
-    protected IActionResult ConvertToActionResult<TResult>(ApiCallResponse<TResult> response, [CallerMemberName] string? action = null) =>
+    protected IActionResult ConvertToActionResult(IRequestResult response, [CallerMemberName] string? action = null) =>
         response.Status switch
         {
             RequestStatus.Success => Ok(response),
@@ -21,9 +21,9 @@ public abstract class ApiControllerBase<TController>(ILogger<TController> logger
             RequestStatus.Error => RecordException(response, action)
         };
 
-    protected IActionResult RecordException<TResult>(ApiCallResponse<TResult> response, string? action)
+    protected IActionResult RecordException(IRequestResult response, string? action)
     {
-        Logger.LogError($"Controller: `{nameof(TController)}` Action: `{action}` Message: `{response.Error?.UserFriendlyMessage}` Exception: `{response.Error?.Error}`.");
+        Logger.LogError($"Controller: `{nameof(TController)}` Action: `{action}` Message: `{response.Error?.UserFriendlyMessage}` Exception: `{response.Error?.Exception}`.");
         return StatusCode((int)response.Status, response);
     }
 }

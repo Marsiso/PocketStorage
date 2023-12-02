@@ -15,7 +15,7 @@ public sealed class HostAuthenticationStateProvider(NavigationManager navigation
 
     private async Task<ClaimsPrincipal> FetchUser()
     {
-        ApiCallResponseWrapper<ApiCallResponseOfUserInfo>? response = null;
+        ApiCallResponseWrapper<GetUserInfoQueryResult>? response = null;
 
         try
         {

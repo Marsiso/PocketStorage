@@ -34,7 +34,7 @@ public class Worker(IServiceProvider serviceProvider) : IHostedService
             User? originalUser = await manager.FindByEmailAsync(user.Email);
             if (originalUser != null)
             {
-                await manager.DeleteAsync(originalUser);
+                continue;
             }
 
             await manager.CreateAsync(new User
