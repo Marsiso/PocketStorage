@@ -2,41 +2,55 @@
 
 @inject IStringLocalizer<Resource> Localizer
 
-<MudThemeProvider IsDarkMode="true"/>
+<MudThemeProvider Theme="@Theme"/>
 <MudDialogProvider/>
 <MudSnackbarProvider/>
 
 <PermitView Context="ParentAuthenticationState">
     <Authorized>
         <MudLayout>
-            <MudAppBar Color="Color.Inherit">
-                <MudButton Href="/" StartIcon="@Icons.Material.Rounded.RocketLaunch" IconSize="Size.Large" Color="Color.Inherit" Variant="Variant.Text">
-                    <MudText Typo="Typo.h6" Inline="true">@Localizer["Common_AppName"]</MudText>
-                </MudButton>
-                <MudSpacer/>
+            <MudAppBar Elevation="25">
                 <MudStack Row="true" Spacing="6">
-                    <CultureSelector/>
-                    <Authenticator/>
-                    <Avatar/>
+                    <MudIconButton Edge="Edge.Start" Icon="@Icons.Material.Filled.Menu" OnClick="@(() => _isSideBarVisible = !_isSideBarVisible)"/>
+                    <MudButton Href="/" IconSize="Size.Large" StartIcon="@Icons.Material.Rounded.RocketLaunch" Variant="Variant.Text">
+                        <MudText Typo="Typo.h6" Inline="true">@Localizer["Common_AppName"]</MudText>
+                    </MudButton>
                 </MudStack>
+                <MudSpacer/>
+                <Avatar/>
             </MudAppBar>
-            <MudMainContent>
-                <MudContainer Class="pt-6">
+            <MudDrawer @bind-Open="@_isSideBarVisible" Elevation="25" Variant="DrawerVariant.Persistent">
+                @* <MudDrawerHeader> *@
+                @* </MudDrawerHeader> *@
+                <MudNavMenu>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Dashboard">Dashboard</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Folder">Files</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Link">Shared</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.History">Recent</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Delete">Deleted</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.PrivacyTip">Privacy</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.TaskAlt">Jobs</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Cookie">Cookie</MudNavLink>
+                    <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Rounded.Settings">Settings</MudNavLink>
+                </MudNavMenu>
+            </MudDrawer>
+            <MudMainContent Class="pb-16">
+                <MudContainer Class="pt-6 mb-6">
                     @Body
                 </MudContainer>
             </MudMainContent>
-            <MudAppBar Bottom="true" Color="Color.Inherit">
+            <MudAppBar Bottom="true"Elevation="25">
                 <MudSpacer/>
                 <MudStack Row="true" Justify="Justify.Center" Spacing="6">
-                    <MudButton Href="/" StartIcon="@Icons.Material.Rounded.Dashboard" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text">
+                    <MudButton Href="/" StartIcon="@Icons.Material.Rounded.Dashboard" Variant="Variant.Text">
                         <MudText>@Localizer["Layout_MainLayout_HomeButton"]</MudText>
                     </MudButton>
-                    <MudButton Href="/privacy" StartIcon="@Icons.Material.Rounded.PrivacyTip" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text">
+                    <MudButton Href="/privacy" StartIcon="@Icons.Material.Rounded.PrivacyTip" Variant="Variant.Text">
                         <MudText>@Localizer["Layout_MainLayout_PrivacyButton"]</MudText>
                     </MudButton>
                     <PermitView Permissions="Permission.ViewUsers">
                         <Authorized>
-                            <MudButton Href="/user/claims" StartIcon="@Icons.Material.Rounded.Cookie" IconSize="Size.Medium" Color="Color.Inherit" Variant="Variant.Text">
+                            <MudButton Href="/user/claims" StartIcon="@Icons.Material.Rounded.Cookie" Variant="Variant.Text">
                                 <MudText>@Localizer["Layout_MainLayout_ClaimsButton"]</MudText>
                             </MudButton>
                         </Authorized>
@@ -56,3 +70,21 @@
         </MudStack>
     </Authorizing>
 </PermitView>
+
+@code {
+    private bool _isSideBarVisible;
+
+    public static readonly MudTheme Theme = new()
+    {
+        Palette = new PaletteLight
+        {
+            AppbarText = Colors.Shades.Black,
+            AppbarBackground = Colors.Shades.White,
+            DrawerText = Colors.Shades.Black,
+            DrawerBackground = Colors.Shades.White,
+            TextPrimary = Colors.Shades.Black,
+            Background = Colors.Shades.White
+        }
+    };
+
+}

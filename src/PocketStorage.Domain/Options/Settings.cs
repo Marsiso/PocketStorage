@@ -1,20 +1,15 @@
 ﻿namespace PocketStorage.Domain.Options;
 
-public class ApplicationSettings
+public class Settings
 {
     public const string SectionName = "Application";
 
-    public required AspNetSettings AspNet { get; set; }
-    public required PostgresqlSettings Postgresql { get; set; }
+    public required IdentitySettings Identity { get; set; }
+    public required DatabaseSettings Database { get; set; }
     public required OpenIdConnectSettings OpenIdConnect { get; set; }
 }
 
-public class AspNetSettings
-{
-    public required AspNetIdentitySettings Identity { get; set; }
-}
-
-public class AspNetIdentitySettings
+public class IdentitySettings
 {
     public required List<AspNetIdentityUserSettings> Users { get; set; }
 }
@@ -33,7 +28,7 @@ public class AspNetIdentityUserSettings
     public required List<string> Roles { get; set; } = new();
 }
 
-public class PostgresqlSettings
+public class DatabaseSettings
 {
     public required string Host { get; set; } = string.Empty;
     public required int Port { get; set; }
@@ -59,8 +54,8 @@ public class OpenIdConnectServerSettings
 
 public class OpenIdConnectClientSettings
 {
-    public required string Id { get; set; } = string.Empty;
-    public required string Secret { get; set; } = string.Empty;
+    public required string ClientId { get; set; } = string.Empty;
+    public required string ClientSecret { get; set; } = string.Empty;
     public required string DisplayName { get; set; } = string.Empty;
     public required List<string> Scopes { get; set; } = new();
     public required List<string> Endpoints { get; set; } = new();

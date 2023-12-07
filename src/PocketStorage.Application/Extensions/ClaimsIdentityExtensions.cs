@@ -8,9 +8,7 @@ using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.BFF.Authorization.Enums;
 using PocketStorage.BFF.Authorization.Helpers;
 using PocketStorage.Core.Application.Queries;
-using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Enums;
-using PocketStorage.Domain.Models;
 using static System.String;
 using static OpenIddict.Abstractions.OpenIddictConstants.Claims;
 
@@ -23,7 +21,7 @@ public static class ClaimsIdentityExtensions
         Guard.IsNotNull(sender);
         Guard.IsNotNull(identity);
 
-        ApiCallResponse<User> userResult = await sender.Send(new FindUserQuery(email), cancellationToken);
+        FindUserQueryResult userResult = await sender.Send(new FindUserQuery(email), cancellationToken);
         if (userResult is not { Status: RequestStatus.Success, Result: not null })
         {
             return identity;
@@ -48,7 +46,7 @@ public static class ClaimsIdentityExtensions
         identity.SetClaim(Zoneinfo, TimeZoneInfo.Local.DisplayName);
         identity.SetClaim(UpdatedAt, userResult.Result.DateUpdated.ToString(new CultureInfo(userResult.Result.Culture)));
 
-        ApiCallResponse<IEnumerable<Role>> rolesResult = await sender.Send(new FindUserRolesQuery(userResult.Result.Id), cancellationToken);
+        FindUserRolesQueryResult rolesResult = await sender.Send(new FindUserRolesQuery(userResult.Result.Id), cancellationToken);
         if (rolesResult is not { Status: RequestStatus.Success, Result: not null })
         {
             return identity;
@@ -57,7 +55,7 @@ public static class ClaimsIdentityExtensions
         Permission permissions = rolesResult.Result.Select(role => role.Permissions).Aggregate(Permission.None, (accumulator, permission) => accumulator | permission);
         identity.SetClaim(PermitConstants.Claims.Permissions, PolicyNameHelpers.GetPolicyNameFor(permissions));
 
-        identity.SetClaims(OpenIddictConstants.Claims.Role, rolesResult.Result.Select(role => role.Name).ToImmutableArray());
+        identity.SetClaims(Role, rolesResult.Result.Select(role => role.Name).ToImmutableArray());
 
         return identity;
     }

@@ -5,7 +5,7 @@ namespace PocketStorage.Application.Helpers;
 
 public static class SecurityHeadersHelpers
 {
-    public static HeaderPolicyCollection GetHeaderPolicyCollection(bool development, ApplicationSettings settings)
+    public static HeaderPolicyCollection GetHeaderPolicyCollection(bool development, Settings settings)
     {
         HeaderPolicyCollection policyCollection = new HeaderPolicyCollection()
             .AddFrameOptionsDeny()

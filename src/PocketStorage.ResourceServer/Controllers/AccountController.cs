@@ -7,6 +7,7 @@ using PocketStorage.ResourceServer.Controllers.Base;
 
 namespace PocketStorage.ResourceServer.Controllers;
 
+[ApiExplorerSettings(IgnoreApi = true)]
 public class AccountController : ApiControllerBase<AccountController>
 {
     public AccountController(ILogger<AccountController> logger) : base(logger)

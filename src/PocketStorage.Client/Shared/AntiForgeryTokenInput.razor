@@ -3,16 +3,16 @@
 <input type="hidden" id="__RequestVerificationToken" name="__RequestVerificationToken" value="@GetToken()">
 
 @code {
-    private string token = string.Empty;
+    private string _token = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        token = await JSRuntime.InvokeAsync<string>("getAntiForgeryToken");
+        _token = await JSRuntime.InvokeAsync<string>("getAntiForgeryToken");
     }
 
     public string GetToken()
     {
-        return token;
+        return _token;
     }
 
 }

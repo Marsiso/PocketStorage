@@ -3,7 +3,6 @@ using MediatR;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
 using PocketStorage.Domain.Enums;
-using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Application.Application.Validators;
 
@@ -32,13 +31,13 @@ public class LoginInputValidator : AbstractValidator<LoginInput>
 
     private async Task<bool> HasValidEmail(string? email, CancellationToken cancellationToken)
     {
-        ApiCallResponse<bool> result = await _mediator.Send(new VerifyEmailExistsQuery(email), cancellationToken);
+        VerifyEmailExistsQueryResult result = await _mediator.Send(new VerifyEmailExistsQuery(email), cancellationToken);
         return result is { Status: RequestStatus.Success, Result: true };
     }
 
     private async Task<bool> HasValidPassword(string? email, string? password, CancellationToken cancellationToken)
     {
-        ApiCallResponse<bool> result = await _mediator.Send(new VerifyPasswordQuery(email, password), cancellationToken);
+        VerifyPasswordQueryResult result = await _mediator.Send(new VerifyPasswordQuery(email, password), cancellationToken);
         return result is { Status: RequestStatus.Success, Result: true };
     }
 }

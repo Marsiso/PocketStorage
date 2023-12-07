@@ -2,9 +2,7 @@
 using MediatR;
 using PocketStorage.Core.Application.Queries;
 using PocketStorage.Domain.Application.DataTransferObjects;
-using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Enums;
-using PocketStorage.Domain.Models;
 
 namespace PocketStorage.Application.Application.Validators;
 
@@ -25,13 +23,13 @@ public class DeletePersonalDataInputValidator : AbstractValidator<DeletePersonal
 
     private async Task<bool> HasValidPassword(string? password, CancellationToken cancellationToken)
     {
-        ApiCallResponse<User> userResult = await _mediator.Send(new GetUserQuery(), cancellationToken);
+        GetUserQueryResult userResult = await _mediator.Send(new GetUserQuery(), cancellationToken);
         if (userResult.Status != RequestStatus.Success)
         {
             return false;
         }
 
-        ApiCallResponse<bool> verificationResult = await _mediator.Send(new VerifyPasswordQuery(userResult.Result.Email, password), cancellationToken);
+        VerifyPasswordQueryResult verificationResult = await _mediator.Send(new VerifyPasswordQuery(userResult.Result.Email, password), cancellationToken);
         return verificationResult is { Status: RequestStatus.Success, Result: true };
     }
 }

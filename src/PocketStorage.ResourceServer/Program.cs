@@ -1,11 +1,16 @@
 using System.Globalization;
 using FluentValidation;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Localization;
+using Microsoft.IdentityModel.Tokens;
 using NSwag;
 using NSwag.AspNetCore;
 using NSwag.Generation.Processors.Security;
@@ -16,6 +21,7 @@ using PocketStorage.Application.Application.Validators;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Helpers;
 using PocketStorage.Application.Services;
+using PocketStorage.BFF.Authorization.Constants;
 using PocketStorage.BFF.Authorization.Extensions;
 using PocketStorage.Client;
 using PocketStorage.Core.Application.Queries;
@@ -28,13 +34,13 @@ using PocketStorage.Domain.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-string? solutionLocation = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.FullName ?? throw new InvalidOperationException();
+string solutionLocation = Directory.GetParent(Directory.GetCurrentDirectory())?.Parent?.FullName ?? throw new InvalidOperationException();
 IConfigurationRoot globalSettings = new ConfigurationBuilder()
     .SetBasePath(solutionLocation)
     .AddJsonFile("appsettings.json")
     .Build();
 
-ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
+Settings settings = globalSettings.GetSection(Settings.SectionName).Get<Settings>() ?? throw new InvalidOperationException();
 
 builder.AddServiceDefaults();
 builder.AddRedisOutputCache("redis-cache");
@@ -46,38 +52,70 @@ IWebHostEnvironment environment = builder.Environment;
 services.AddOptions();
 services.AddSingleton(configuration);
 services.AddSingleton(environment);
-services.AddSingleton(applicationSettings);
-
+services.AddSingleton(settings);
 services.AddAntiforgery(options => options.Configure(environment.IsDevelopment()));
 services.AddHttpClient();
 
 services
-    .AddAuthentication(options => options.Configure())
-    .AddCookie()
-    .AddOpenIdConnect(options => options.Configure(environment.IsDevelopment(), applicationSettings));
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
+    })
+    .AddCookie(options => { options.Cookie.Name = "__RESOURCE-SERVER-COOKIE"; })
+    .AddOpenIdConnect(options =>
+    {
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+
+        options.Authority = settings.OpenIdConnect.Server.Authority;
+        options.ClientId = settings.OpenIdConnect.Clients.Single(client => client.ClientId == "pocket_storage_resource_server").ClientId;
+        options.ClientSecret = settings.OpenIdConnect.Clients.Single(client => client.ClientId == "pocket_storage_resource_server").ClientSecret;
+
+        options.UsePkce = true;
+        options.ResponseType = OpenIddictConstants.ResponseTypes.Code;
+        options.RequireHttpsMetadata = !environment.IsDevelopment();
+
+        options.Scope.Add(OpenIddictConstants.Scopes.Profile);
+        options.Scope.Add(OpenIddictConstants.Scopes.Roles);
+        options.Scope.Add(OpenIddictScopeDefaults.Name);
+        options.Scope.Add(OpenIddictScopeDefaults.Email);
+        options.Scope.Add(OpenIddictScopeDefaults.PhoneNumber);
+        options.Scope.Add(OpenIddictScopeDefaults.Locale);
+        options.Scope.Add(OpenIddictScopeDefaults.Zoneinfo);
+        options.Scope.Add(OpenIddictScopeDefaults.UpdatedAt);
+        options.Scope.Add(PermitConstants.Scopes.Permissions);
+        options.Scope.Add(OpenIddictConstants.Scopes.OfflineAccess);
+
+        options.SaveTokens = true;
+        options.GetClaimsFromUserInfoEndpoint = true;
+        options.RefreshInterval = TimeSpan.FromMinutes(3);
+        options.AutomaticRefreshInterval = TimeSpan.FromMinutes(10);
+
+        options.AccessDeniedPath = "/";
+        options.TokenValidationParameters = new TokenValidationParameters { NameClaimType = OpenIddictConstants.Claims.Name };
+    });
 
 services.AddPermissionAuthorization();
-
 services.AddControllersWithViews(options => options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 services.AddLocalization(options => options.ResourcesPath = "Resources");
 services.AddTransient<IStringLocalizer, StringLocalizer<App>>();
 
 services
     .AddRazorPages()
-    .AddMvcOptions(options => options.Configure());
+    .AddMvcOptions(options => options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build())));
 
 services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
-services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), applicationSettings));
+services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), settings));
 services.AddDatabaseDeveloperPageExceptionFilter();
-
 services.AddSingleton<IPasswordHasher<User>, ArgonPasswordHasher<User>>();
 
-services.AddIdentityCore<User>()
+services
+    .AddIdentityCore<User>()
     .AddRoles<Role>()
     .AddEntityFrameworkStores<DataContext>();
 
 services.AddHttpContextAccessor();
-
 services.AddAutoMapper(typeof(UserProfile));
 services.AddValidatorsFromAssembly(typeof(LoginInputValidator).Assembly);
 services.AddMediatR(options =>
@@ -112,7 +150,7 @@ services.AddOpenApiDocument(options =>
                 {
                     TokenUrl = "http://localhost:5000/connect/token",
                     AuthorizationUrl = "http://localhost:5000/connect/authorize",
-                    Scopes = new Dictionary<string, string>(applicationSettings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server_swagger").Scopes.ToDictionary(scope => scope, _ => "Scope description"))
+                    Scopes = new Dictionary<string, string>(settings.OpenIdConnect.Clients.Single(client => client.ClientId == "pocket_storage_resource_server_swagger").Scopes.ToDictionary(scope => scope, _ => "Scope description"))
                     {
                         [OpenIddictConstants.Scopes.OpenId] = "Scope description"
                     }
@@ -125,36 +163,38 @@ services.AddOpenApiDocument(options =>
 
 WebApplication application = builder.Build();
 
-CultureInfo[] supportedCultures = { new(CultureDefaults.English), new(CultureDefaults.Czech) };
-application.UseRequestLocalization(new RequestLocalizationOptions { DefaultRequestCulture = new RequestCulture(CultureDefaults.Default), SupportedCultures = supportedCultures, SupportedUICultures = supportedCultures });
+application.UseSecurityHeaders(SecurityHeadersHelpers.GetHeaderPolicyCollection(environment.IsDevelopment(), settings));
+application.UseRequestLocalization(options =>
+{
+    CultureInfo[] supportedCultures = { new(CultureDefaults.English), new(CultureDefaults.Czech) };
+
+    options.DefaultRequestCulture = new RequestCulture(CultureDefaults.Default);
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
 
 if (environment.IsDevelopment())
 {
     application.UseDeveloperExceptionPage();
     application.UseWebAssemblyDebugging();
-
     application.UseOpenApi();
     application.UseSwaggerUi(options =>
     {
         options.DocumentTitle = "Pocket Storage Resource Server";
 
-        OpenIdConnectClientSettings client = applicationSettings.OpenIdConnect.Clients.Single(client => client.Id == "pocket_storage_resource_server_swagger");
-        options.OAuth2Client = new OAuth2ClientSettings { AppName = client.DisplayName, ClientId = client.Id, ClientSecret = client.Secret, UsePkceWithAuthorizationCodeGrant = true };
+        OpenIdConnectClientSettings client = settings.OpenIdConnect.Clients.Single(client => client.ClientId == "pocket_storage_resource_server_swagger");
+        options.OAuth2Client = new OAuth2ClientSettings { AppName = client.DisplayName, ClientId = client.ClientId, ClientSecret = client.ClientSecret, UsePkceWithAuthorizationCodeGrant = true };
     });
 
     application.UseReDoc(options => options.Path = "/redoc");
 }
-
-application.UseSecurityHeaders(SecurityHeadersHelpers.GetHeaderPolicyCollection(environment.IsDevelopment(), applicationSettings));
-
-if (!environment.IsDevelopment())
+else
 {
     application.UseHttpsRedirection();
 }
 
 application.UseBlazorFrameworkFiles();
 application.UseStaticFiles();
-
 application.UseRouting();
 application.UseNoUnauthorizedRedirect("/api");
 application.UseAuthentication();
@@ -166,7 +206,6 @@ application.MapRazorPages();
 application.MapControllers();
 application.MapNotFound("/api/{**segment}");
 application.MapFallbackToPage("/_Host");
-application.MapGet("startup", () => new { GrafanaUrl = (string)configuration["GRAFANA_URL"] });
 
 application.UseOutputCache();
 
