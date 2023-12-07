@@ -25,18 +25,29 @@ public class FindUserRolesQueryHandler(DataContext context, ISender sender) : IR
 
     public async Task<FindUserRolesQueryResult> Handle(FindUserRolesQuery request, CancellationToken cancellationToken)
     {
-        if (IsNullOrWhiteSpace(request.UserId))
+        try
         {
-            return new FindUserRolesQueryResult(Unauthorized, new RequestError());
-        }
+            if (IsNullOrWhiteSpace(request.UserId))
+            {
+                return new FindUserRolesQueryResult(Unauthorized, new RequestError());
+            }
 
-        List<Role> roles = await CompiledQuery(context, request.UserId).ToListAsync();
-        if (roles.Count > 0)
+            List<Role> roles = await CompiledQuery(context, request.UserId).ToListAsync();
+            if (roles.Count > 0)
+            {
+                return new FindUserRolesQueryResult(roles);
+            }
+
+            return new FindUserRolesQueryResult(EntityNotFound, new RequestError(EntityNotFound, "The user with the given ID doesn't have any roles assigned.", new EntityNotFoundException(request.UserId, nameof(User))));
+        }
+        catch (OperationCanceledException exception)
         {
-            return new FindUserRolesQueryResult(roles);
+            return new FindUserRolesQueryResult(Cancelled, new RequestError(Cancelled, "Request interrupted by client.", exception));
         }
-
-        return new FindUserRolesQueryResult(EntityNotFound, new RequestError(EntityNotFound, "The user with the given ID doesn't have any roles assigned.", new EntityNotFoundException(request.UserId, nameof(User))));
+        catch (Exception exception)
+        {
+            return new FindUserRolesQueryResult(Error, new RequestError(Error, "Request interrupted by server.", exception));
+        }
     }
 }
 

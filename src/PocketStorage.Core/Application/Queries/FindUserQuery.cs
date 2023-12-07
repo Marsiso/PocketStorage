@@ -19,7 +19,9 @@ public class FindUserQuery(string? email) : IRequest<FindUserQueryResult>
 public class FindUserQueryHandler(DataContext context) : IRequestHandler<FindUserQuery, FindUserQueryResult>
 {
     public static readonly Func<DataContext, string, Task<User?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string email) =>
-        context.Users.AsNoTracking().SingleOrDefault(user => user.Email == email));
+        context.Users
+            .AsNoTracking()
+            .SingleOrDefault(user => user.Email == email));
 
     public async Task<FindUserQueryResult> Handle(FindUserQuery request, CancellationToken cancellationToken)
     {
@@ -44,23 +46,17 @@ public class FindUserQueryHandler(DataContext context) : IRequestHandler<FindUse
         }
         catch (Exception exception)
         {
-            return new FindUserQueryResult(Cancelled, new RequestError(Error, "Request interrupted by server.", exception));
+            return new FindUserQueryResult(Error, new RequestError(Error, "Request interrupted by server.", exception));
         }
     }
 }
 
-public class FindUserQueryResult : IRequestResult
+public class FindUserQueryResult(RequestStatus status, RequestError? error) : IRequestResult
 {
-    public FindUserQueryResult(User? result) => Result = result;
-
-    public FindUserQueryResult(RequestStatus status, RequestError? error)
-    {
-        Status = status;
-        Error = error;
-    }
+    public FindUserQueryResult(User? result) : this(Success, null) => Result = result;
 
     public User? Result { get; set; }
 
-    public RequestStatus Status { get; set; }
-    public RequestError? Error { get; set; }
+    public RequestStatus Status { get; set; } = status;
+    public RequestError? Error { get; set; } = error;
 }

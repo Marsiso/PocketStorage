@@ -1,6 +1,6 @@
 ﻿namespace PocketStorage.Core.Application.Models;
 
-public class UserDetails
+public class UserResource
 {
     public string Email { get; set; } = string.Empty;
     public bool EmailConfirmed { get; set; }
@@ -12,6 +12,6 @@ public class UserDetails
     public string FamilyName { get; set; } = string.Empty;
     public string Culture { get; set; } = string.Empty;
     public string ProfilePhoto { get; set; } = string.Empty;
-    public UserDetails? UserCreatedBy { get; set; }
-    public UserDetails? UserUpdatedBy { get; set; }
+    public UserResource? UserCreatedBy { get; set; }
+    public UserResource? UserUpdatedBy { get; set; }
 }

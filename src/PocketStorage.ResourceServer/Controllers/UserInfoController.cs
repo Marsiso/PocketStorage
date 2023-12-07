@@ -17,8 +17,5 @@ public class UserInfoController(IMediator mediator, ILogger<UserInfoController> 
     [HttpGet("~/api/userinfo")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status400BadRequest, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status404NotFound, MediaTypeNames.Application.Json)]
-    [ProducesResponseType(typeof(GetUserInfoQueryResult), StatusCodes.Status500InternalServerError, MediaTypeNames.Application.Json)]
-    public async Task<IActionResult> GetCurrentUser(CancellationToken cancellationToken) => ConvertToActionResult(await mediator.Send(new GetUserInfoQuery(), cancellationToken));
+    public async Task<IActionResult> GetUserInfo(CancellationToken cancellationToken) => ConvertToActionResult(await mediator.Send(new GetUserInfoQuery(), cancellationToken));
 }

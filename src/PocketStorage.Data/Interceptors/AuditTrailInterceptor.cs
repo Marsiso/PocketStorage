@@ -59,19 +59,17 @@ public class AuditTrailInterceptor : SaveChangesInterceptor
     {
         context.ChangeTracker.DetectChanges();
 
-        DateTime date = DateTime.UtcNow;
-
         foreach (EntityEntry<IChangeTrackingEntity> entityEntry in context.ChangeTracker.Entries<IChangeTrackingEntity>())
         {
             switch (entityEntry.State)
             {
                 case EntityState.Added:
                     entityEntry.Entity.IsActive = true;
-                    entityEntry.Entity.DateCreated = entityEntry.Entity.DateUpdated = date;
+                    entityEntry.Entity.DateCreated = entityEntry.Entity.DateUpdated = DateTime.UtcNow;
                     continue;
 
                 case EntityState.Modified:
-                    entityEntry.Entity.DateUpdated = date;
+                    entityEntry.Entity.DateUpdated = DateTime.UtcNow;
                     continue;
 
                 default:

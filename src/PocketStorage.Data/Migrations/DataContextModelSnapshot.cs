@@ -18,7 +18,7 @@ namespace PocketStorage.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("Files")
-                .HasAnnotation("ProductVersion", "7.0.13")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -163,6 +163,11 @@ namespace PocketStorage.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("id");
 
+                    b.Property<string>("ApplicationType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("application_type");
+
                     b.Property<string>("ClientId")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -171,6 +176,11 @@ namespace PocketStorage.Data.Migrations
                     b.Property<string>("ClientSecret")
                         .HasColumnType("text")
                         .HasColumnName("client_secret");
+
+                    b.Property<string>("ClientType")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("client_type");
 
                     b.Property<string>("ConcurrencyToken")
                         .IsConcurrencyToken()
@@ -190,6 +200,10 @@ namespace PocketStorage.Data.Migrations
                     b.Property<string>("DisplayNames")
                         .HasColumnType("text")
                         .HasColumnName("display_names");
+
+                    b.Property<string>("JsonWebKeySet")
+                        .HasColumnType("text")
+                        .HasColumnName("json_web_key_set");
 
                     b.Property<string>("Permissions")
                         .HasColumnType("text")
@@ -211,10 +225,9 @@ namespace PocketStorage.Data.Migrations
                         .HasColumnType("text")
                         .HasColumnName("requirements");
 
-                    b.Property<string>("Type")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("type");
+                    b.Property<string>("Settings")
+                        .HasColumnType("text")
+                        .HasColumnName("settings");
 
                     b.HasKey("Id")
                         .HasName("pk_applications");
@@ -911,9 +924,9 @@ namespace PocketStorage.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.HasOne("PocketStorage.Domain.Application.Models.User", null)
-                        .WithMany()
+                        .WithMany("Claims")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("fk_user_claims_users_user_id");
                 });
@@ -921,9 +934,9 @@ namespace PocketStorage.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.HasOne("PocketStorage.Domain.Application.Models.User", null)
-                        .WithMany()
+                        .WithMany("Logins")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("fk_user_logins_users_user_id");
                 });
@@ -931,16 +944,16 @@ namespace PocketStorage.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.HasOne("PocketStorage.Domain.Application.Models.Role", null)
-                        .WithMany()
+                        .WithMany("UserRoles")
                         .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_roles_role_id");
 
                     b.HasOne("PocketStorage.Domain.Application.Models.User", null)
-                        .WithMany()
+                        .WithMany("UserRoles")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("fk_user_roles_users_user_id");
                 });
@@ -948,9 +961,9 @@ namespace PocketStorage.Data.Migrations
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.HasOne("PocketStorage.Domain.Application.Models.User", null)
-                        .WithMany()
+                        .WithMany("Tokens")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("fk_user_tokens_users_user_id");
                 });
@@ -1156,9 +1169,22 @@ namespace PocketStorage.Data.Migrations
                     b.Navigation("Folders");
                 });
 
+            modelBuilder.Entity("PocketStorage.Domain.Application.Models.Role", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+
             modelBuilder.Entity("PocketStorage.Domain.Application.Models.User", b =>
                 {
+                    b.Navigation("Claims");
+
                     b.Navigation("Folders");
+
+                    b.Navigation("Logins");
+
+                    b.Navigation("Tokens");
+
+                    b.Navigation("UserRoles");
                 });
 
             modelBuilder.Entity("PocketStorage.Domain.Files.Models.Folder", b =>

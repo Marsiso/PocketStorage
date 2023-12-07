@@ -18,7 +18,9 @@ public class GetUserQuery : IRequest<GetUserQueryResult>, IEmailRequest
 public class GetUserQueryHandler(DataContext context) : IRequestHandler<GetUserQuery, GetUserQueryResult>
 {
     public static readonly Func<DataContext, string, Task<User?>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, string email) =>
-        context.Users.AsNoTracking().SingleOrDefault(user => user.Email == email));
+        context.Users
+            .AsNoTracking()
+            .SingleOrDefault(user => user.Email == email));
 
     public async Task<GetUserQueryResult> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {

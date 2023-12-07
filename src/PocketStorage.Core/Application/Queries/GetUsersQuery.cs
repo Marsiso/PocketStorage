@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using PocketStorage.Core.Application.Models;
 using PocketStorage.Core.Extensions;
 using PocketStorage.Data;
-using PocketStorage.Domain.Application.Models;
 using PocketStorage.Domain.Contracts;
 using PocketStorage.Domain.Enums;
 using PocketStorage.Domain.Models;
@@ -11,42 +10,34 @@ using static PocketStorage.Domain.Enums.RequestStatus;
 
 namespace PocketStorage.Core.Application.Queries;
 
-public class GetUsersQuery : IRequest<GetUsersQueryResult>
+public class GetUsersQuery(UserQueryString queryString) : IRequest<GetUsersQueryResult>
 {
+    public UserQueryString QueryString { get; set; } = queryString;
 }
 
 public class GetUsersQueryHandler(DataContext context) : IRequestHandler<GetUsersQuery, GetUsersQueryResult>
 {
-    private static readonly Func<DataContext, IAsyncEnumerable<User>> CompiledQuery = EF.CompileAsyncQuery((DataContext context) => context.Users.AsNoTracking()
-        .Include(user => user.UserCreatedBy)
-        .Include(user => user.UserUpdatedBy));
-
-    public async Task<GetUsersQueryResult> Handle(GetUsersQuery request, CancellationToken cancellationToken)
-    {
-        try
-        {
-            List<User> users = await CompiledQuery(context).ToListAsync();
-            List<UserDetails> details = new();
-
-            foreach (User user in users)
+    private static readonly Func<DataContext, int, int, IAsyncEnumerable<UserResource>> CompiledQuery = EF.CompileAsyncQuery((DataContext context, int skip, int take) =>
+        context.Users
+            .AsNoTracking()
+            .Include(user => user.UserCreatedBy)
+            .Include(user => user.UserUpdatedBy)
+            .Skip(skip)
+            .Take(take)
+            .Select(user => new UserResource
             {
-                UserDetails detail = new()
-                {
-                    Email = user.Email,
-                    EmailConfirmed = user.EmailConfirmed,
-                    PhoneNumber = user.PhoneNumber,
-                    PhoneNumberConfirmed = user.PhoneNumberConfirmed,
-                    UserName = user.UserName,
-                    GivenName = user.GivenName,
-                    MiddleName = null,
-                    FamilyName = user.FamilyName,
-                    Culture = user.Culture,
-                    ProfilePhoto = user.ProfilePhoto
-                };
-
-                if (user.UserCreatedBy != null)
-                {
-                    detail.UserCreatedBy = new UserDetails
+                Email = user.Email,
+                EmailConfirmed = user.EmailConfirmed,
+                PhoneNumber = user.PhoneNumber,
+                PhoneNumberConfirmed = user.PhoneNumberConfirmed,
+                UserName = user.UserName,
+                GivenName = user.GivenName,
+                MiddleName = null,
+                FamilyName = user.FamilyName,
+                Culture = user.Culture,
+                ProfilePhoto = user.ProfilePhoto,
+                UserCreatedBy = user.UserCreatedBy != null
+                    ? new UserResource
                     {
                         Email = user.UserCreatedBy.Email,
                         EmailConfirmed = user.UserCreatedBy.EmailConfirmed,
@@ -58,12 +49,10 @@ public class GetUsersQueryHandler(DataContext context) : IRequestHandler<GetUser
                         FamilyName = user.UserCreatedBy.FamilyName,
                         Culture = user.UserCreatedBy.Culture,
                         ProfilePhoto = user.UserCreatedBy.ProfilePhoto
-                    };
-                }
-
-                if (user.UserUpdatedBy != null)
-                {
-                    detail.UserUpdatedBy = new UserDetails
+                    }
+                    : null,
+                UserUpdatedBy = user.UserUpdatedBy != null
+                    ? new UserResource
                     {
                         Email = user.UserUpdatedBy.Email,
                         EmailConfirmed = user.UserUpdatedBy.EmailConfirmed,
@@ -75,13 +64,24 @@ public class GetUsersQueryHandler(DataContext context) : IRequestHandler<GetUser
                         FamilyName = user.UserUpdatedBy.FamilyName,
                         Culture = user.UserUpdatedBy.Culture,
                         ProfilePhoto = user.UserUpdatedBy.ProfilePhoto
-                    };
-                }
+                    }
+                    : null
+            }));
 
-                details.Add(detail);
-            }
+    private static readonly Func<DataContext, Task<int>> CompiledCountQuery = EF.CompileAsyncQuery((DataContext context) =>
+        context.Users
+            .AsNoTracking()
+            .Count());
 
-            return new GetUsersQueryResult(details.ToList());
+    public async Task<GetUsersQueryResult> Handle(GetUsersQuery request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return new GetUsersQueryResult(new PagedList<UserResource>(
+                await CompiledQuery(context, request.QueryString.RecordsOffset(), request.QueryString.RecordsToReturn()).ToListAsync(),
+                await CompiledCountQuery(context),
+                request.QueryString.PageNumber,
+                request.QueryString.PageSize));
         }
         catch (OperationCanceledException exception)
         {
@@ -96,9 +96,8 @@ public class GetUsersQueryHandler(DataContext context) : IRequestHandler<GetUser
 
 public class GetUsersQueryResult(RequestStatus status, RequestError? error) : IRequestResult
 {
-    public GetUsersQueryResult(List<UserDetails>? result) : this(Success, null) => Result = result;
-
-    public List<UserDetails>? Result { get; set; }
+    public GetUsersQueryResult(PagedList<UserResource>? result) : this(Success, null) => Result = result;
+    public PagedList<UserResource>? Result { get; set; }
 
     public RequestStatus Status { get; set; } = status;
     public RequestError? Error { get; set; } = error;

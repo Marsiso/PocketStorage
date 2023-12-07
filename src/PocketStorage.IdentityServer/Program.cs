@@ -2,10 +2,10 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using OpenIddict.Abstractions;
 using PocketStorage.AppHost.ServiceDefaults;
 using PocketStorage.Application.Application.Mappings;
 using PocketStorage.Application.Application.Validators;
-using PocketStorage.Application.BackgroundServices;
 using PocketStorage.Application.Extensions;
 using PocketStorage.Application.Services;
 using PocketStorage.Core.Application.Queries;
@@ -23,7 +23,7 @@ IConfigurationRoot globalSettings = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
+Settings settings = globalSettings.GetSection(Settings.SectionName).Get<Settings>() ?? throw new InvalidOperationException();
 
 builder.AddServiceDefaults();
 builder.AddRedisOutputCache("redis-cache");
@@ -36,8 +36,10 @@ services.AddRazorPages();
 services.AddControllersWithViews();
 
 services.AddOptions();
+
 services.AddSingleton(configuration);
-services.AddSingleton(applicationSettings);
+services.AddSingleton(environment);
+services.AddSingleton(settings);
 
 services.AddOptions<ArgonPasswordHasherOptions>()
     .Configure(options => { options.Pepper = "SecurePasswordPepper"; })
@@ -47,16 +49,46 @@ services.AddOptions<ArgonPasswordHasherOptions>()
 services.AddSingleton<IPasswordHasher<User>, ArgonPasswordHasher<User>>();
 
 services.AddTransient<ISaveChangesInterceptor, AuditTrailInterceptor>();
-services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), applicationSettings));
+services.AddDbContext<DataContext>(options => options.Configure(environment.IsDevelopment(), settings));
 services.AddDatabaseDeveloperPageExceptionFilter();
 
-services.AddIdentity<User, Role>(options => options.Configure())
+services.AddIdentity<User, Role>(options =>
+    {
+        options.ClaimsIdentity.UserNameClaimType = OpenIddictConstants.Claims.Name;
+        options.ClaimsIdentity.UserIdClaimType = OpenIddictConstants.Claims.Subject;
+        options.ClaimsIdentity.RoleClaimType = OpenIddictConstants.Claims.Role;
+        options.ClaimsIdentity.EmailClaimType = OpenIddictConstants.Claims.Email;
+
+        options.SignIn.RequireConfirmedAccount = false;
+
+        options.Password.RequireDigit = true;
+        options.Password.RequireLowercase = true;
+        options.Password.RequireUppercase = true;
+        options.Password.RequireNonAlphanumeric = true;
+        options.Password.RequiredLength = 10;
+        options.Password.RequiredUniqueChars = 1;
+
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.AllowedForNewUsers = true;
+
+        options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
+        options.User.RequireUniqueEmail = true;
+    })
     .AddEntityFrameworkStores<DataContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
 
 services.Configure<DataProtectionTokenProviderOptions>(options => options.TokenLifespan = TimeSpan.FromHours(1));
-services.ConfigureApplicationCookie(options => options.Configure());
+services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = "__IDENTITY-SERVER-TOKEN";
+    options.Cookie.HttpOnly = true;
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(15);
+    options.LoginPath = "/identity/account/login";
+    options.AccessDeniedPath = "/identity/account/accessDenied";
+    options.SlidingExpiration = true;
+});
 
 services.AddOpenIddict()
     .AddCore(options =>
@@ -66,7 +98,7 @@ services.AddOpenIddict()
     })
     .AddServer(builder =>
     {
-        builder.SetIssuer(applicationSettings.OpenIdConnect.Server.Authority);
+        builder.SetIssuer(settings.OpenIdConnect.Server.Authority);
 
         // Enable the authorization, logout, token and user info endpoints.
         builder.SetAuthorizationEndpointUris("/connect/authorize");
@@ -77,10 +109,10 @@ services.AddOpenIddict()
         builder.SetVerificationEndpointUris("/connect/verify");
 
         // Mark the "profile.name", "profile.email", ... as supported scopes.
-        builder.RegisterScopes(applicationSettings.OpenIdConnect.Server.SupportedScopes.ToArray());
+        builder.RegisterScopes(settings.OpenIdConnect.Server.SupportedScopes.ToArray());
 
         // Mark the "name", "given_name", ... as supported claims.
-        builder.RegisterClaims(applicationSettings.OpenIdConnect.Server.SupportedClaims.ToArray());
+        builder.RegisterClaims(settings.OpenIdConnect.Server.SupportedClaims.ToArray());
 
         // Enable the client credentials flow
         builder.AllowClientCredentialsFlow();
@@ -122,7 +154,7 @@ services.AddMediatR(options =>
     options.AddBehavior(typeof(IPipelineBehavior<,>), typeof(RequestPipelineBehaviour<,>));
 });
 
-services.AddHostedService<Worker>();
+services.AddHostedService<InitialDataProvider>();
 
 WebApplication application = builder.Build();
 

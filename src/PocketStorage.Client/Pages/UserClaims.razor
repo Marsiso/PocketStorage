@@ -1,7 +1,4 @@
-﻿@using PocketStorage.BFF.Authorization.Filters
-@using PocketStorage.BFF.Authorization.Enums
-@using PocketStorage.BFF.Authorization.Components
-@attribute [Route(Routes.User.Claims)]
+﻿@attribute [Route(Routes.User.Claims)]
 @attribute [Permit(Permissions = Permission.ViewUsers)]
 
 <PermitView Context="AuthenticationState" Permissions="Permission.EditUsers">

@@ -10,14 +10,14 @@ IConfigurationRoot globalSettings = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
     .Build();
 
-ApplicationSettings applicationSettings = globalSettings.GetSection(ApplicationSettings.SectionName).Get<ApplicationSettings>() ?? throw new InvalidOperationException();
+Settings settings = globalSettings.GetSection(Settings.SectionName).Get<Settings>() ?? throw new InvalidOperationException();
 
 IResourceBuilder<RedisContainerResource> redis = builder.AddRedisContainer("redis-cache");
-IResourceBuilder<PostgresContainerResource> postgres = builder.AddPostgresContainer("postgresql", applicationSettings.Postgresql.Port, applicationSettings.Postgresql.Password);
+IResourceBuilder<PostgresContainerResource> postgres = builder.AddPostgresContainer("postgresql", settings.Database.Port, settings.Database.Password);
 
-postgres.WithEnvironment("POSTGRES_DB", applicationSettings.Postgresql.Database);
-postgres.WithEnvironment("POSTGRES_USER", applicationSettings.Postgresql.Username);
-postgres.WithEnvironment("POSTGRES_PASSWORD", applicationSettings.Postgresql.Password);
+postgres.WithEnvironment("POSTGRES_DB", settings.Database.Database);
+postgres.WithEnvironment("POSTGRES_USER", settings.Database.Username);
+postgres.WithEnvironment("POSTGRES_PASSWORD", settings.Database.Password);
 
 IResourceBuilder<ContainerResource> grafana = builder.AddContainer("grafana", "grafana/grafana")
     .WithVolumeMount("../../grafana/config", "/etc/grafana")

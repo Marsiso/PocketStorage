@@ -29,24 +29,24 @@ public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpCo
             return new GetUserInfoQueryResult(result.Status, result.Error);
         }
 
-        UserInfo userinfo = new() { IsAuthenticated = true };
+        UserInfo userInfo = new() { IsAuthenticated = true };
         if (httpContextAccessor.HttpContext.User.Identity is ClaimsIdentity identity)
         {
-            userinfo.NameClaimType = identity.NameClaimType;
-            userinfo.RoleClaimType = identity.RoleClaimType;
+            userInfo.NameClaimType = identity.NameClaimType;
+            userInfo.RoleClaimType = identity.RoleClaimType;
         }
         else
         {
-            userinfo.NameClaimType = ClaimTypes.Name;
-            userinfo.RoleClaimType = ClaimTypes.Role;
+            userInfo.NameClaimType = ClaimTypes.Name;
+            userInfo.RoleClaimType = ClaimTypes.Role;
         }
 
         if (!httpContextAccessor.HttpContext.User.Claims.Any())
         {
-            return new GetUserInfoQueryResult(userinfo);
+            return new GetUserInfoQueryResult(userInfo);
         }
 
-        userinfo.Claims = new List<ClaimValue>();
+        userInfo.Claims = new List<ClaimValue>();
         foreach (Claim claim in httpContextAccessor.HttpContext.User.Claims)
         {
             if (claim.Type == OpenIddictConstants.Claims.UpdatedAt)
@@ -54,10 +54,10 @@ public class GetUserInfoQueryHandler(ISender sender, IHttpContextAccessor httpCo
                 continue;
             }
 
-            userinfo.Claims.Add(new ClaimValue(claim.Type, claim.Value));
+            userInfo.Claims.Add(new ClaimValue(claim.Type, claim.Value));
         }
 
-        return new GetUserInfoQueryResult(userinfo);
+        return new GetUserInfoQueryResult(userInfo);
     }
 }
 
